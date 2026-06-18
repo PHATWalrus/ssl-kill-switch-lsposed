@@ -1,6 +1,7 @@
 package com.horizon.sslkillswitch.hooks
 
-import de.robv.android.xposed.XposedBridge
+import android.util.Log
+import com.horizon.sslkillswitch.MainHook.Companion.TAG
 
 object NativeHooks {
 
@@ -8,17 +9,16 @@ object NativeHooks {
 
     fun apply(cl: ClassLoader, pkg: String) {
         if (loaded) {
-            // Library already in process — re-run hook scan for this package
             nativeScanAndHook()
             return
         }
         try {
             System.loadLibrary("ssl_kill_switch")
             loaded = true
-            XposedBridge.log("[SSLKillSwitch] Native library loaded for $pkg")
+            Log.d(TAG, "[$pkg] native library loaded")
             nativeScanAndHook()
         } catch (e: UnsatisfiedLinkError) {
-            XposedBridge.log("[SSLKillSwitch] Native library load failed: ${e.message}")
+            Log.e(TAG, "[$pkg] native library load failed: ${e.message}")
         }
     }
 

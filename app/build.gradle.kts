@@ -51,8 +51,8 @@ android {
 }
 
 dependencies {
-    compileOnly("de.robv.android.xposed:api:82")
-    // compileOnly("io.github.libxposed:api:102.0.0")
+    //compileOnly("de.robv.android.xposed:api:82")
+    compileOnly("io.github.libxposed:api:102.0.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.recyclerview)

@@ -1,7 +1,8 @@
 R_DEF: Internal format may change without notice
 local
-color purple_500
-color purple_700
+color android_green
+color android_green_dark
+color on_primary
 color white
 drawable ic_launcher_background
 drawable ic_launcher_foreground
@@ -10,6 +11,7 @@ id btnDumpNat
 id btnEditDomains
 id btnFlushIptables
 id btnSelectApps
+id chipGroupSelectedApps
 id etProxyHost
 id etProxyPort
 id etSearch
@@ -20,6 +22,7 @@ id switchProxy
 id tvAppName
 id tvNatDump
 id tvPackageName
+id tvSelectedAppsLabel
 layout activity_app_list
 layout activity_main
 layout item_app

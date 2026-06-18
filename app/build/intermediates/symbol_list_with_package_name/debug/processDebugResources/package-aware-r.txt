@@ -1268,6 +1268,8 @@ color abc_tint_spinner
 color abc_tint_switch_track
 color accent_material_dark
 color accent_material_light
+color android_green
+color android_green_dark
 color androidx_core_ripple_material_light
 color androidx_core_secondary_text_default_material_light
 color background_floating_material_dark
@@ -1992,6 +1994,7 @@ color mtrl_textinput_focused_box_stroke_color
 color mtrl_textinput_hovered_box_stroke_color
 color notification_action_color_filter
 color notification_icon_bg_color
+color on_primary
 color primary_dark_material_dark
 color primary_dark_material_light
 color primary_material_dark
@@ -2000,8 +2003,6 @@ color primary_text_default_material_dark
 color primary_text_default_material_light
 color primary_text_disabled_material_dark
 color primary_text_disabled_material_light
-color purple_500
-color purple_700
 color ripple_material_dark
 color ripple_material_light
 color secondary_text_default_material_dark
@@ -3114,6 +3115,7 @@ id chain
 id chains
 id checkbox
 id checked
+id chipGroupSelectedApps
 id chronometer
 id circle_center
 id clear_text
@@ -3463,6 +3465,7 @@ id triangle
 id tvAppName
 id tvNatDump
 id tvPackageName
+id tvSelectedAppsLabel
 id unchecked
 id uniform
 id unlabeled

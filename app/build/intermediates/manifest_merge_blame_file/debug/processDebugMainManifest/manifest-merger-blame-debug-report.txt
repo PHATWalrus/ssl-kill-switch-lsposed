@@ -17,152 +17,168 @@
 13    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 13-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:6:5-81
 13-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:6:22-78
-14    <!-- Root shell for iptables -->
-15    <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
-15-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:8:5-75
-15-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:8:22-72
-16
-17    <permission
-17-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
-18        android:name="com.horizon.sslkillswitch.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-18-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:23:9-81
-19        android:protectionLevel="signature" />
-19-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:24:9-44
-20
-21    <uses-permission android:name="com.horizon.sslkillswitch.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-21-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:26:5-97
-21-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
-22
-23    <application
-23-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:10:5-43:19
-24        android:allowBackup="false"
-24-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:11:9-36
-25        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-25-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
-26        android:debuggable="true"
-27        android:extractNativeLibs="false"
-28        android:icon="@mipmap/ic_launcher"
-28-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:12:9-43
-29        android:label="@string/app_name"
-29-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:13:9-41
-30        android:supportsRtl="true"
-30-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:14:9-35
-31        android:testOnly="true"
-32        android:theme="@style/Theme.SSLKillSwitch" >
-32-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:15:9-51
-33        <activity
-33-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:17:9-25:20
-34            android:name="com.horizon.sslkillswitch.ui.MainActivity"
-34-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:18:13-44
-35            android:exported="true"
-35-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:19:13-36
-36            android:label="@string/app_name" >
-36-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:20:13-45
-37            <intent-filter>
-37-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:21:13-24:29
-38                <action android:name="android.intent.action.MAIN" />
-38-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:22:17-69
-38-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:22:25-66
-39
-40                <category android:name="android.intent.category.LAUNCHER" />
-40-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:23:17-77
-40-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:23:27-74
-41            </intent-filter>
-42        </activity>
-43        <activity
-43-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:27:9-30:51
-44            android:name="com.horizon.sslkillswitch.ui.AppListActivity"
-44-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:28:13-47
-45            android:exported="false"
-45-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:29:13-37
-46            android:label="@string/select_apps" />
-46-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:30:13-48
-47
-48        <!-- LSPosed module metadata -->
-49        <meta-data
-49-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:33:9-35:36
-50            android:name="xposedmodule"
-50-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:34:13-40
-51            android:value="true" />
-51-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:35:13-33
-52        <meta-data
-52-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:36:9-38:89
-53            android:name="xposeddescription"
-53-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:37:13-45
-54            android:value="Disable SSL certificate pinning (Java + Native/BoringSSL)" />
-54-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:38:13-86
-55        <meta-data
-55-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:39:9-41:34
-56            android:name="xposedminversion"
-56-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:40:13-44
-57            android:value="82" />
-57-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:41:13-31
-58
-59        <provider
-59-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
-60            android:name="androidx.startup.InitializationProvider"
-60-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
-61            android:authorities="com.horizon.sslkillswitch.androidx-startup"
-61-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
-62            android:exported="false" >
-62-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
-63            <meta-data
-63-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
-64                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-64-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
-65                android:value="androidx.startup" />
-65-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
-66            <meta-data
-66-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\davide.caputo\.gradle\caches\transforms-4\0a87b9955fbd882e796e623282bafa1d\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
-67                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-67-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\davide.caputo\.gradle\caches\transforms-4\0a87b9955fbd882e796e623282bafa1d\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
-68                android:value="androidx.startup" />
-68-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\davide.caputo\.gradle\caches\transforms-4\0a87b9955fbd882e796e623282bafa1d\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
-69            <meta-data
-69-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
-70                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-70-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
-71                android:value="androidx.startup" />
-71-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
-72        </provider>
-73
-74        <receiver
-74-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
-75            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-75-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
-76            android:directBootAware="false"
-76-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
-77            android:enabled="true"
-77-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
-78            android:exported="true"
-78-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
-79            android:permission="android.permission.DUMP" >
-79-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
-80            <intent-filter>
-80-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
-81                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-81-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
-81-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
-82            </intent-filter>
-83            <intent-filter>
-83-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
-84                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-84-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
-84-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
-85            </intent-filter>
-86            <intent-filter>
-86-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
-87                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
-88            </intent-filter>
+14    <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
+14-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:7:5-75
+14-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:7:22-72
+15
+16    <permission
+16-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
+17        android:name="com.horizon.sslkillswitch.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+17-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:23:9-81
+18        android:protectionLevel="signature" />
+18-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:24:9-44
+19
+20    <uses-permission android:name="com.horizon.sslkillswitch.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+20-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:26:5-97
+20-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
+21
+22    <application
+22-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:9:5-52:19
+23        android:allowBackup="false"
+23-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:10:9-36
+24        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+24-->[androidx.core:core:1.13.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\e949a38bdcfd00ba1a7d019301123a60\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
+25        android:debuggable="true"
+26        android:extractNativeLibs="false"
+27        android:icon="@mipmap/ic_launcher"
+27-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:11:9-43
+28        android:label="@string/app_name"
+28-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:12:9-41
+29        android:supportsRtl="true"
+29-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:13:9-35
+30        android:testOnly="true"
+31        android:theme="@style/Theme.SSLKillSwitch" >
+31-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:14:9-51
+32        <activity
+32-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:16:9-24:20
+33            android:name="com.horizon.sslkillswitch.ui.MainActivity"
+33-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:17:13-44
+34            android:exported="true"
+34-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:18:13-36
+35            android:label="@string/app_name" >
+35-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:19:13-45
+36            <intent-filter>
+36-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:20:13-23:29
+37                <action android:name="android.intent.action.MAIN" />
+37-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:21:17-69
+37-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:21:25-66
+38
+39                <category android:name="android.intent.category.LAUNCHER" />
+39-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:22:17-77
+39-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:22:27-74
+40            </intent-filter>
+41        </activity>
+42        <activity
+42-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:26:9-29:51
+43            android:name="com.horizon.sslkillswitch.ui.AppListActivity"
+43-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:27:13-47
+44            android:exported="false"
+44-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:28:13-37
+45            android:label="@string/select_apps" />
+45-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:29:13-48
+46
+47        <!-- libxposed v2 entry point -->
+48        <service
+48-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:32:9-39:19
+49            android:name="com.horizon.sslkillswitch.MainHook"
+49-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:33:13-37
+50            android:exported="true"
+50-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:34:13-36
+51            android:permission="io.github.libxposed.permission.ACCESS_SERVICE" >
+51-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:35:13-79
+52            <intent-filter>
+52-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:36:13-38:29
+53                <action android:name="io.github.libxposed.action.MODULE_INIT" />
+53-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:37:17-81
+53-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:37:25-78
+54            </intent-filter>
+55        </service>
+56
+57        <!-- LSPosed module metadata -->
+58        <meta-data
+58-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:42:9-44:36
+59            android:name="xposedmodule"
+59-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:43:13-40
+60            android:value="true" />
+60-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:44:13-33
+61        <meta-data
+61-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:45:9-47:89
+62            android:name="xposeddescription"
+62-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:46:13-45
+63            android:value="Disable SSL certificate pinning (Java + Native/BoringSSL)" />
+63-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:47:13-86
+64        <meta-data
+64-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:48:9-50:34
+65            android:name="xposedminversion"
+65-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:49:13-44
+66            android:value="93" />
+66-->C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\AndroidManifest.xml:50:13-31
+67
+68        <provider
+68-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+69            android:name="androidx.startup.InitializationProvider"
+69-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+70            android:authorities="com.horizon.sslkillswitch.androidx-startup"
+70-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+71            android:exported="false" >
+71-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+72            <meta-data
+72-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+73                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+73-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+74                android:value="androidx.startup" />
+74-->[androidx.emoji2:emoji2:1.3.0] C:\Users\davide.caputo\.gradle\caches\transforms-4\75e98dd6bd26d391d4f1f29f66891883\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+75            <meta-data
+75-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\davide.caputo\.gradle\caches\transforms-4\0a87b9955fbd882e796e623282bafa1d\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
+76                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+76-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\davide.caputo\.gradle\caches\transforms-4\0a87b9955fbd882e796e623282bafa1d\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
+77                android:value="androidx.startup" />
+77-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\davide.caputo\.gradle\caches\transforms-4\0a87b9955fbd882e796e623282bafa1d\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
+78            <meta-data
+78-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+79                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+79-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+80                android:value="androidx.startup" />
+80-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+81        </provider>
+82
+83        <receiver
+83-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+84            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+84-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+85            android:directBootAware="false"
+85-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+86            android:enabled="true"
+86-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+87            android:exported="true"
+87-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+88            android:permission="android.permission.DUMP" >
+88-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
 89            <intent-filter>
-89-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
-90                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-90-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
-90-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+89-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+90                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
 91            </intent-filter>
-92        </receiver>
-93    </application>
-94
-95</manifest>
+92            <intent-filter>
+92-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+93                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+94            </intent-filter>
+95            <intent-filter>
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+96                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+97            </intent-filter>
+98            <intent-filter>
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+99                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\davide.caputo\.gradle\caches\transforms-4\4ea8f17d444f81c551ed665af291d109\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+100            </intent-filter>
+101        </receiver>
+102    </application>
+103
+104</manifest>

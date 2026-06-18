@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.horizon.sslkillswitch.R;
@@ -35,6 +36,9 @@ public final class ActivityMainBinding implements ViewBinding {
   public final Button btnSelectApps;
 
   @NonNull
+  public final ChipGroup chipGroupSelectedApps;
+
+  @NonNull
   public final TextInputEditText etProxyHost;
 
   @NonNull
@@ -49,21 +53,27 @@ public final class ActivityMainBinding implements ViewBinding {
   @NonNull
   public final TextView tvNatDump;
 
+  @NonNull
+  public final TextView tvSelectedAppsLabel;
+
   private ActivityMainBinding(@NonNull ScrollView rootView, @NonNull Button btnApplyIptables,
       @NonNull Button btnDumpNat, @NonNull Button btnFlushIptables, @NonNull Button btnSelectApps,
-      @NonNull TextInputEditText etProxyHost, @NonNull TextInputEditText etProxyPort,
-      @NonNull SwitchMaterial switchNativeHooks, @NonNull SwitchMaterial switchProxy,
-      @NonNull TextView tvNatDump) {
+      @NonNull ChipGroup chipGroupSelectedApps, @NonNull TextInputEditText etProxyHost,
+      @NonNull TextInputEditText etProxyPort, @NonNull SwitchMaterial switchNativeHooks,
+      @NonNull SwitchMaterial switchProxy, @NonNull TextView tvNatDump,
+      @NonNull TextView tvSelectedAppsLabel) {
     this.rootView = rootView;
     this.btnApplyIptables = btnApplyIptables;
     this.btnDumpNat = btnDumpNat;
     this.btnFlushIptables = btnFlushIptables;
     this.btnSelectApps = btnSelectApps;
+    this.chipGroupSelectedApps = chipGroupSelectedApps;
     this.etProxyHost = etProxyHost;
     this.etProxyPort = etProxyPort;
     this.switchNativeHooks = switchNativeHooks;
     this.switchProxy = switchProxy;
     this.tvNatDump = tvNatDump;
+    this.tvSelectedAppsLabel = tvSelectedAppsLabel;
   }
 
   @Override
@@ -117,6 +127,12 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.chipGroupSelectedApps;
+      ChipGroup chipGroupSelectedApps = ViewBindings.findChildViewById(rootView, id);
+      if (chipGroupSelectedApps == null) {
+        break missingId;
+      }
+
       id = R.id.etProxyHost;
       TextInputEditText etProxyHost = ViewBindings.findChildViewById(rootView, id);
       if (etProxyHost == null) {
@@ -147,9 +163,15 @@ public final class ActivityMainBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.tvSelectedAppsLabel;
+      TextView tvSelectedAppsLabel = ViewBindings.findChildViewById(rootView, id);
+      if (tvSelectedAppsLabel == null) {
+        break missingId;
+      }
+
       return new ActivityMainBinding((ScrollView) rootView, btnApplyIptables, btnDumpNat,
-          btnFlushIptables, btnSelectApps, etProxyHost, etProxyPort, switchNativeHooks, switchProxy,
-          tvNatDump);
+          btnFlushIptables, btnSelectApps, chipGroupSelectedApps, etProxyHost, etProxyPort,
+          switchNativeHooks, switchProxy, tvNatDump, tvSelectedAppsLabel);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

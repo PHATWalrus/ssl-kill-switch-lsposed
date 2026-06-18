@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
+    <color name="android_green">#FF3DDC84</color>
+    <color name="android_green_dark">#FF00AF60</color>
+    <color name="on_primary">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

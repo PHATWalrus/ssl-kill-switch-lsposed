@@ -1,12 +1,19 @@
 package com.horizon.sslkillswitch.ui
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.chip.Chip
 import com.horizon.sslkillswitch.config.ConfigWriter
 import com.horizon.sslkillswitch.databinding.ActivityMainBinding
 import com.horizon.sslkillswitch.iptables.IptablesManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,9 +23,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
-
         loadConfig()
         setupListeners()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshSelectedApps()
     }
 
     private fun loadConfig() {
@@ -26,6 +37,41 @@ class MainActivity : AppCompatActivity() {
         b.etProxyPort.setText(ConfigWriter.getProxyPort(this).toString())
         b.switchProxy.isChecked = ConfigWriter.isProxyEnabled(this)
         b.switchNativeHooks.isChecked = true
+    }
+
+    private fun refreshSelectedApps() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val enabled = ConfigWriter.getEnabledApps(this@MainActivity)
+            val pm = packageManager
+            val chips = enabled.map { pkg ->
+                val label = try {
+                    pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+                } catch (_: PackageManager.NameNotFoundException) { pkg }
+                Pair(pkg, label)
+            }.sortedBy { it.second }
+
+            withContext(Dispatchers.Main) {
+                b.chipGroupSelectedApps.removeAllViews()
+                if (chips.isEmpty()) {
+                    b.tvSelectedAppsLabel.visibility = View.VISIBLE
+                    b.tvSelectedAppsLabel.text = "No apps selected"
+                } else {
+                    b.tvSelectedAppsLabel.visibility = View.GONE
+                    chips.forEach { (pkg, label) ->
+                        val chip = Chip(this@MainActivity).apply {
+                            text = label
+                            isClickable = false
+                            isCheckable = false
+                            setOnLongClickListener {
+                                Toast.makeText(this@MainActivity, pkg, Toast.LENGTH_SHORT).show()
+                                true
+                            }
+                        }
+                        b.chipGroupSelectedApps.addView(chip)
+                    }
+                }
+            }
+        }
     }
 
     private fun setupListeners() {
@@ -46,13 +92,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         b.btnDumpNat.setOnClickListener {
-            val dump = IptablesManager.dumpNatTable()
-            b.tvNatDump.text = dump
+            b.tvNatDump.text = IptablesManager.dumpNatTable()
         }
 
-        b.switchProxy.setOnCheckedChangeListener { _, checked ->
-            saveProxyConfig()
-        }
+        b.switchProxy.setOnCheckedChangeListener { _, _ -> saveProxyConfig() }
 
         b.switchNativeHooks.setOnCheckedChangeListener { _, checked ->
             ConfigWriter.setNativeHooksEnabled(this, checked)

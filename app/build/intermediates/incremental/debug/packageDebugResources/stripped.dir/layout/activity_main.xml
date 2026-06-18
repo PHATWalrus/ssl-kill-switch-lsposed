@@ -7,8 +7,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:spacing="8dp">
+        android:orientation="vertical">
 
         <!-- Header -->
         <TextView
@@ -43,7 +42,23 @@
                     android:id="@+id/btnSelectApps"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Select Apps" />
+                    android:text="Select Apps"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:id="@+id/tvSelectedAppsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No apps selected"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:visibility="gone" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupSelectedApps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

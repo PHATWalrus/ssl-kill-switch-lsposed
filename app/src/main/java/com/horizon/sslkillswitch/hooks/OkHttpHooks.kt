@@ -1,116 +1,68 @@
 package com.horizon.sslkillswitch.hooks
 
-import com.horizon.sslkillswitch.config.HookConfig
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers
+import android.util.Log
+import com.horizon.sslkillswitch.MainHook.Companion.TAG
+import io.github.libxposed.api.XposedInterface
+import javax.net.ssl.HostnameVerifier
 
 object OkHttpHooks {
 
-    fun apply(cl: ClassLoader, pkg: String, config: HookConfig) {
-        hookCertificatePinner(cl)
-        hookOkHttpBuilder(cl)
-        hookTrustKit(cl)
+    fun apply(xposed: XposedInterface, cl: ClassLoader, pkg: String) {
+        hookCertificatePinner(xposed, cl, pkg)
+        hookOkHttpClientBuild(xposed, cl, pkg)
+        hookTrustKit(xposed, cl, pkg)
     }
 
-    private fun hookCertificatePinner(cl: ClassLoader) {
-        val noop = object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                param.result = null
-            }
+    private fun hookCertificatePinner(xposed: XposedInterface, cl: ClassLoader, pkg: String) {
+        val noop = XposedInterface.Hooker { chain ->
+            Log.d(TAG, "[$pkg] CertificatePinner.check intercepted")
+            null
         }
 
-        // OkHttp 3.x — CertificatePinner.check(String, List)
-        try {
-            XposedHelpers.findAndHookMethod(
-                "okhttp3.CertificatePinner", cl,
-                "check", String::class.java, List::class.java,
-                noop
-            )
-        } catch (_: Throwable) {}
+        // OkHttp 3.x
+        tryHook(xposed, "okhttp3.CertificatePinner", cl, "check",
+            arrayOf(String::class.java, List::class.java), noop)
 
-        // OkHttp 4.x — check$okhttp (internal Kotlin method)
-        try {
-            XposedHelpers.findAndHookMethod(
-                "okhttp3.CertificatePinner", cl,
-                "check\$okhttp", String::class.java, java.util.function.Function::class.java,
-                noop
-            )
-        } catch (_: Throwable) {}
+        // OkHttp 4.x internal Kotlin method
+        tryHook(xposed, "okhttp3.CertificatePinner", cl, "check\$okhttp",
+            arrayOf(String::class.java, java.util.function.Function::class.java), noop)
 
-        // Legacy OkHttp (okhttp2)
-        try {
-            XposedHelpers.findAndHookMethod(
-                "com.squareup.okhttp.CertificatePinner", cl,
-                "check", String::class.java, java.security.cert.Certificate::class.java,
-                noop
-            )
-        } catch (_: Throwable) {}
+        // Legacy okhttp2
+        tryHook(xposed, "com.squareup.okhttp.CertificatePinner", cl, "check",
+            arrayOf(String::class.java, java.security.cert.Certificate::class.java), noop)
     }
 
-    private fun hookOkHttpBuilder(cl: ClassLoader) {
-        // Strip CertificatePinner when OkHttpClient is built
-        try {
-            XposedHelpers.findAndHookMethod(
-                "okhttp3.OkHttpClient\$Builder", cl, "build",
-                object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        try {
-                            val emptyPinner = XposedHelpers.callStaticMethod(
-                                XposedHelpers.findClass("okhttp3.CertificatePinner", cl),
-                                "getDEFAULT"
-                            )
-                            XposedHelpers.setObjectField(param.thisObject, "certificatePinner", emptyPinner)
-                        } catch (_: Throwable) {}
-                    }
+    private fun hookOkHttpClientBuild(xposed: XposedInterface, cl: ClassLoader, pkg: String) {
+        tryHook(xposed, "okhttp3.OkHttpClient\$Builder", cl, "build", emptyArray(),
+            XposedInterface.Hooker { chain ->
+                val client = chain.proceed()
+                if (client != null) {
+                    setField(client, "hostnameVerifier", HostnameVerifier { _, _ -> true })
+                    Log.d(TAG, "[$pkg] OkHttpClient.build intercepted — hostnameVerifier replaced")
                 }
-            )
-        } catch (_: Throwable) {}
-
-        // Also null out the hostnameVerifier to allow-all
-        try {
-            XposedHelpers.findAndHookMethod(
-                "okhttp3.OkHttpClient\$Builder", cl, "build",
-                object : XC_MethodHook() {
-                    override fun afterHookedMethod(param: MethodHookParam) {
-                        try {
-                            val client = param.result ?: return
-                            XposedHelpers.setObjectField(
-                                client, "hostnameVerifier",
-                                javax.net.ssl.HostnameVerifier { _, _ -> true }
-                            )
-                        } catch (_: Throwable) {}
-                    }
-                }
-            )
-        } catch (_: Throwable) {}
+                client
+            }
+        )
     }
 
-    private fun hookTrustKit(cl: ClassLoader) {
-        // TrustKit OkHostnameVerifier
-        try {
-            XposedHelpers.findAndHookMethod(
-                "com.datatheorem.android.trustkit.pinning.OkHostnameVerifier", cl,
-                "verify", String::class.java, javax.net.ssl.SSLSession::class.java,
-                object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        param.result = true
-                    }
-                }
-            )
-        } catch (_: Throwable) {}
+    private fun hookTrustKit(xposed: XposedInterface, cl: ClassLoader, pkg: String) {
+        tryHook(xposed,
+            "com.datatheorem.android.trustkit.pinning.OkHostnameVerifier", cl,
+            "verify", arrayOf(String::class.java, javax.net.ssl.SSLSession::class.java),
+            XposedInterface.Hooker { chain ->
+                Log.d(TAG, "[$pkg] TrustKit OkHostnameVerifier.verify intercepted")
+                true
+            }
+        )
 
-        try {
-            XposedHelpers.findAndHookMethod(
-                "com.datatheorem.android.trustkit.pinning.PinningTrustManager", cl,
-                "checkServerTrusted",
-                Array<java.security.cert.X509Certificate>::class.java, String::class.java,
-                object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        param.result = null
-                    }
-                }
-            )
-        } catch (_: Throwable) {}
+        tryHook(xposed,
+            "com.datatheorem.android.trustkit.pinning.PinningTrustManager", cl,
+            "checkServerTrusted",
+            arrayOf(Array<java.security.cert.X509Certificate>::class.java, String::class.java),
+            XposedInterface.Hooker { chain ->
+                Log.d(TAG, "[$pkg] TrustKit PinningTrustManager.checkServerTrusted intercepted")
+                null
+            }
+        )
     }
 }

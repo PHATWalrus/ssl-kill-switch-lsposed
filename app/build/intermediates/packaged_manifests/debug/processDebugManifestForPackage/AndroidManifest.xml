@@ -11,7 +11,6 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <!-- Root shell for iptables -->
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
 
     <permission
@@ -45,6 +44,16 @@
             android:exported="false"
             android:label="@string/select_apps" />
 
+        <!-- libxposed v2 entry point -->
+        <service
+            android:name="com.horizon.sslkillswitch.MainHook"
+            android:exported="true"
+            android:permission="io.github.libxposed.permission.ACCESS_SERVICE" >
+            <intent-filter>
+                <action android:name="io.github.libxposed.action.MODULE_INIT" />
+            </intent-filter>
+        </service>
+
         <!-- LSPosed module metadata -->
         <meta-data
             android:name="xposedmodule"
@@ -54,7 +63,7 @@
             android:value="Disable SSL certificate pinning (Java + Native/BoringSSL)" />
         <meta-data
             android:name="xposedminversion"
-            android:value="82" />
+            android:value="93" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"
