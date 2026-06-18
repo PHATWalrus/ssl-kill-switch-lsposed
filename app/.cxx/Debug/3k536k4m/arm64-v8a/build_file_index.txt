@@ -1,0 +1,1 @@
+C:\Users\davide.caputo\developer\ssl-kill-switch-lsposed\app\src\main\jni\CMakeLists.txt
