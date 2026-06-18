@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         b.btnFlushIptables.setOnClickListener {
+            val host = b.etProxyHost.text.toString().trim()
+            IptablesManager.removeGlobalRedirect(host)
             IptablesManager.removeAllRules()
                 .onSuccess { toast("iptables rules flushed") }
                 .onFailure { toast("Flush failed: ${it.message}") }
@@ -68,9 +70,12 @@ class MainActivity : AppCompatActivity() {
 
         saveProxyConfig()
 
+        IptablesManager.applyGlobalRedirect(host)
+            .onFailure { toast("Global redirect failed: ${it.message}") }
+
         val enabledApps = ConfigWriter.getEnabledApps(this)
         if (enabledApps.isEmpty()) {
-            toast("No apps selected")
+            toast("Global redirect applied")
             return
         }
 
@@ -83,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                 .onSuccess { applied++ }
                 .onFailure { failed++ }
         }
-        toast("Applied $applied rules, $failed failed")
+        toast("Global redirect + $applied app rules applied, $failed failed")
     }
 
     private fun saveProxyConfig() {

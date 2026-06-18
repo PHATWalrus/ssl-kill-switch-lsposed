@@ -28,6 +28,20 @@ object IptablesManager {
         synchronized(activeRules) { activeRules.remove(rule) }
     }
 
+    fun applyGlobalRedirect(destHost: String): Result<Unit> = runCatching {
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:443")
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:80")
+        exec("iptables -t nat -A POSTROUTING -p tcp --dport 443 -j MASQUERADE")
+        exec("iptables -t nat -A POSTROUTING -p tcp --dport 80 -j MASQUERADE")
+    }
+
+    fun removeGlobalRedirect(destHost: String): Result<Unit> = runCatching {
+        exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:443")
+        exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:80")
+        exec("iptables -t nat -D POSTROUTING -p tcp --dport 443 -j MASQUERADE")
+        exec("iptables -t nat -D POSTROUTING -p tcp --dport 80 -j MASQUERADE")
+    }
+
     fun removeAllRules(): Result<Unit> = runCatching {
         synchronized(activeRules) {
             activeRules.toList().forEach { rule ->
