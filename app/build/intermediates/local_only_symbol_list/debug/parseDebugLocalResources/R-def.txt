@@ -1,0 +1,29 @@
+R_DEF: Internal format may change without notice
+local
+color purple_500
+color purple_700
+color white
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+id btnApplyIptables
+id btnDumpNat
+id btnEditDomains
+id btnFlushIptables
+id btnSelectApps
+id etProxyHost
+id etProxyPort
+id etSearch
+id recyclerView
+id switchEnabled
+id switchNativeHooks
+id switchProxy
+id tvAppName
+id tvNatDump
+id tvPackageName
+layout activity_app_list
+layout activity_main
+layout item_app
+mipmap ic_launcher
+string app_name
+string select_apps
+style Theme.SSLKillSwitch

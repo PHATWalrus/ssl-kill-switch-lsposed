@@ -11,9 +11,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://jitpack.io")
+        maven { url = uri("https://api.xposed.info/") }
     }
 }
 
 rootProject.name = "ssl-kill-switch-lsposed"
 include(":app")
+include(":xposed-api")

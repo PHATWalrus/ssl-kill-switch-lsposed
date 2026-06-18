@@ -1,0 +1,26 @@
+[
+    {
+        "merged": "com.horizon.sslkillswitch.app-debug-32:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.horizon.sslkillswitch.app-main-34:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-debug-32:/layout_activity_app_list.xml.flat",
+        "source": "com.horizon.sslkillswitch.app-main-34:/layout/activity_app_list.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-debug-32:/layout_activity_main.xml.flat",
+        "source": "com.horizon.sslkillswitch.app-main-34:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-debug-32:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.horizon.sslkillswitch.app-main-34:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-debug-32:/layout_item_app.xml.flat",
+        "source": "com.horizon.sslkillswitch.app-main-34:/layout/item_app.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-debug-32:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.horizon.sslkillswitch.app-main-34:/drawable/ic_launcher_background.xml"
+    }
+]

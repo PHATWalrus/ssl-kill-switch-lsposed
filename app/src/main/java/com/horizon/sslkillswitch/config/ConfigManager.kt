@@ -53,9 +53,8 @@ class HookConfig(private val prefs: XSharedPreferences) {
 // Write-side: used from module UI (runs as app itself)
 object ConfigWriter {
 
-    @Suppress("DEPRECATION", "WorldReadableFiles")
     private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_WORLD_READABLE)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     fun setAppEnabled(context: Context, packageName: String, enabled: Boolean) {
         val p = prefs(context)

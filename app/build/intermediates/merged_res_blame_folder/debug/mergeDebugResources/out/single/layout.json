@@ -1,0 +1,14 @@
+[
+    {
+        "merged": "com.horizon.sslkillswitch.app-mergeDebugResources-31:/layout/item_app.xml",
+        "source": "com.horizon.sslkillswitch.app-main-34:/layout/item_app.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-mergeDebugResources-31:/layout/activity_app_list.xml",
+        "source": "com.horizon.sslkillswitch.app-main-34:/layout/activity_app_list.xml"
+    },
+    {
+        "merged": "com.horizon.sslkillswitch.app-mergeDebugResources-31:/layout/activity_main.xml",
+        "source": "com.horizon.sslkillswitch.app-main-34:/layout/activity_main.xml"
+    }
+]

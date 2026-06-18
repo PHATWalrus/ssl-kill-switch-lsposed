@@ -28,7 +28,6 @@
     "variantName": "debug",
     "isDebuggableEnabled": true,
     "validAbiList": [
-      "armeabi-v7a",
       "arm64-v8a"
     ],
     "buildTargetSet": [],
@@ -142,6 +141,7 @@
         "rootBuildGradleFolder": "C:\\Users\\davide.caputo\\developer\\ssl-kill-switch-lsposed",
         "sdkFolder": "C:\\Users\\davide.caputo\\AppData\\Local\\Android\\Sdk",
         "isBuildOnlyTargetAbiEnabled": true,
+        "ideBuildTargetAbi": "arm64-v8a,armeabi-v7a,armeabi",
         "isCmakeBuildCohabitationEnabled": false,
         "isPrefabEnabled": false
       },
