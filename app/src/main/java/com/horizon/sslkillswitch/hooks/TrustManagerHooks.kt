@@ -17,8 +17,24 @@ object TrustManagerHooks {
         override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
     }
 
+    /**
+     * Boot-classpath hooks — called from initZygote.
+     * Uses ClassLoader.getSystemClassLoader() which is the boot classpath in Zygote.
+     * These hooks are inherited by ALL forked app processes.
+     */
+    fun applySystem() {
+        val cl = ClassLoader.getSystemClassLoader()
+        if (loggingEnabled) Log.i(TAG, "[system] boot-classpath TrustManager hooks")
+        hookTrustManagerImpl(cl, "system")
+        hookHostnameVerifier(cl, "system")
+        hookSSLContextInit("system")
+        hookConscrypt(cl, "system")
+        hookNetworkSecurityTrustManager(cl, "system")
+    }
+
+    /** Per-process hook with app classloader — covers app-bundled conscrypt variants. */
     fun apply(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[TrustManager] registering hooks for $pkg")
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] registering hooks for $pkg")
         hookTrustManagerImpl(cl, pkg)
         hookHostnameVerifier(cl, pkg)
         hookSSLContextInit(pkg)
@@ -27,10 +43,10 @@ object TrustManagerHooks {
     }
 
     private fun hookTrustManagerImpl(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[TrustManager] hookTrustManagerImpl")
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] hookTrustManagerImpl [$pkg]")
         val noop = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.${param.method.name} — bypassed")
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.${param.method.name}")
                 param.result = null
             }
         }
@@ -52,7 +68,7 @@ object TrustManagerHooks {
             List::class.java, List::class.java, Set::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.checkTrustedRecursive — bypassed")
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.checkTrustedRecursive")
                     param.result = emptyList<X509Certificate>()
                 }
             }
@@ -64,7 +80,7 @@ object TrustManagerHooks {
             ByteArray::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.verifyChain — bypassed")
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.verifyChain")
                     @Suppress("UNCHECKED_CAST")
                     param.result = param.args[0] as Array<X509Certificate>
                 }
@@ -73,10 +89,10 @@ object TrustManagerHooks {
     }
 
     private fun hookHostnameVerifier(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[TrustManager] hookHostnameVerifier")
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] hookHostnameVerifier [$pkg]")
         val alwaysTrue = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                Log.i(TAG, "[$pkg] FIRED: HostnameVerifier.verify — returned true")
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: HostnameVerifier.verify")
                 param.result = true
             }
         }
@@ -92,14 +108,14 @@ object TrustManagerHooks {
     }
 
     private fun hookSSLContextInit(pkg: String) {
-        Log.d(TAG, "[TrustManager] hookSSLContextInit")
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] hookSSLContextInit [$pkg]")
         tryHook(SSLContext::class.java, "init",
             Array<javax.net.ssl.KeyManager>::class.java,
             Array<TrustManager>::class.java,
             java.security.SecureRandom::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    Log.i(TAG, "[$pkg] FIRED: SSLContext.init — replacing TrustManagers")
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: SSLContext.init — replacing TrustManagers")
                     param.args[1] = arrayOf<TrustManager>(permissiveTrustManager)
                 }
             }
@@ -107,10 +123,10 @@ object TrustManagerHooks {
     }
 
     private fun hookConscrypt(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[TrustManager] hookConscrypt")
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] hookConscrypt [$pkg]")
         val noop = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                Log.i(TAG, "[$pkg] FIRED: Conscrypt.${param.method.name} — bypassed")
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: Conscrypt.${param.method.name}")
                 param.result = null
             }
         }
@@ -121,10 +137,10 @@ object TrustManagerHooks {
     }
 
     private fun hookNetworkSecurityTrustManager(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[TrustManager] hookNetworkSecurityTrustManager")
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] hookNetworkSecurityTrustManager [$pkg]")
         val noop = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                Log.i(TAG, "[$pkg] FIRED: NetworkSecurityTrustManager.${param.method.name} — bypassed")
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: NetworkSecurityTrustManager.${param.method.name}")
                 param.result = null
             }
         }

@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         b.etProxyHost.setText(ConfigWriter.getProxyHost(this))
         b.etProxyPort.setText(ConfigWriter.getProxyPort(this).toString())
         b.switchProxy.isChecked = ConfigWriter.isProxyEnabled(this)
-        b.switchNativeHooks.isChecked = true
+        b.switchLogging.isChecked = ConfigWriter.isLoggingEnabled(this)
         b.tvModuleStatus.text = "Module status: install via LSPosed"
     }
 
@@ -93,7 +93,10 @@ class MainActivity : AppCompatActivity() {
             val port = b.etProxyPort.text.toString().toIntOrNull() ?: 8080
             IptablesManager.removeGlobalRedirect(host, port)
             IptablesManager.removeAllRules()
-                .onSuccess { toast("iptables rules flushed") }
+                .onSuccess {
+                    toast("iptables rules flushed")
+                    refreshIptablesDisplay()
+                }
                 .onFailure { toast("Flush failed: ${it.message}") }
         }
 
@@ -103,8 +106,8 @@ class MainActivity : AppCompatActivity() {
 
         b.switchProxy.setOnCheckedChangeListener { _, _ -> saveProxyConfig() }
 
-        b.switchNativeHooks.setOnCheckedChangeListener { _, checked ->
-            ConfigWriter.setNativeHooksEnabled(this, checked)
+        b.switchLogging.setOnCheckedChangeListener { _, checked ->
+            ConfigWriter.setLoggingEnabled(this, checked)
         }
     }
 
@@ -125,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         val enabledApps = ConfigWriter.getEnabledApps(this)
         if (enabledApps.isEmpty()) {
             toast("Global redirect applied")
+            refreshIptablesDisplay()
             return
         }
 
@@ -138,6 +142,18 @@ class MainActivity : AppCompatActivity() {
                 .onFailure { failed++ }
         }
         toast("Global redirect + $applied app rules applied, $failed failed")
+        refreshIptablesDisplay()
+    }
+
+    private fun refreshIptablesDisplay() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val dump = IptablesManager.dumpNatTable()
+            withContext(Dispatchers.Main) {
+                val text = dump.trim().ifBlank { "No rules active" }
+                b.tvIptablesRulesInline.text = text
+                b.tvIptablesRulesInline.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun saveProxyConfig() {

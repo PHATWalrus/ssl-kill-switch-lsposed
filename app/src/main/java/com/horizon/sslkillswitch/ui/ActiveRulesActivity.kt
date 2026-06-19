@@ -19,29 +19,23 @@ class ActiveRulesActivity : AppCompatActivity() {
         b = ActivityActiveRulesBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        refreshRules()
-
         b.btnFlushAll.setOnClickListener {
             IptablesManager.flushAll()
                 .onSuccess {
                     refreshRules()
-                    b.tvNatDump.text = ""
+                    b.tvNatDump.text = "— flushed —"
                     toast("All rules flushed")
                 }
                 .onFailure { toast("Flush failed: ${it.message}") }
         }
 
-        b.btnRefreshDump.setOnClickListener {
-            CoroutineScope(Dispatchers.IO).launch {
-                val dump = IptablesManager.dumpNatTable()
-                withContext(Dispatchers.Main) { b.tvNatDump.text = dump }
-            }
-        }
+        b.btnRefreshDump.setOnClickListener { loadNatDump() }
     }
 
     override fun onResume() {
         super.onResume()
         refreshRules()
+        loadNatDump()
     }
 
     private fun refreshRules() {
@@ -49,7 +43,19 @@ class ActiveRulesActivity : AppCompatActivity() {
         b.tvActiveRules.text = if (rules.isEmpty()) {
             "No active rules"
         } else {
-            rules.joinToString("\n") { "uid=${it.uid}  ${it.packageName}  →  ${it.proxyHost}:${it.proxyPort}" }
+            rules.joinToString("\n\n") { r ->
+                "pkg : ${r.packageName}\nuid : ${r.uid}\ndst : ${r.proxyHost}:${r.proxyPort}"
+            }
+        }
+    }
+
+    private fun loadNatDump() {
+        b.tvNatDump.text = "Loading…"
+        CoroutineScope(Dispatchers.IO).launch {
+            val dump = IptablesManager.dumpNatTable()
+            withContext(Dispatchers.Main) {
+                b.tvNatDump.text = dump.trim().ifBlank { "(empty)" }
+            }
         }
     }
 

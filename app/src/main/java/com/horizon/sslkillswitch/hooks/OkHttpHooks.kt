@@ -12,17 +12,17 @@ private const val TAG = "SSLKillSwitch"
 object OkHttpHooks {
 
     fun apply(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[OkHttp] registering hooks for $pkg")
+        if (loggingEnabled) Log.d(TAG, "[OkHttp] registering hooks for $pkg")
         hookCertificatePinner(cl, pkg)
         hookOkHttpClientBuild(cl, pkg)
         hookTrustKit(cl, pkg)
     }
 
     private fun hookCertificatePinner(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[OkHttp] hookCertificatePinner")
+        if (loggingEnabled) Log.d(TAG, "[OkHttp] hookCertificatePinner")
         val noop = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                Log.i(TAG, "[$pkg] FIRED: CertificatePinner.${param.method.name} — bypassed")
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: CertificatePinner.${param.method.name}")
                 param.result = null
             }
         }
@@ -36,15 +36,12 @@ object OkHttpHooks {
     }
 
     private fun hookOkHttpClientBuild(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[OkHttp] hookOkHttpClientBuild")
+        if (loggingEnabled) Log.d(TAG, "[OkHttp] hookOkHttpClientBuild")
         tryHook("okhttp3.OkHttpClient\$Builder", cl, "build",
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    val client = param.result ?: run {
-                        Log.w(TAG, "[$pkg] OkHttpClient.build returned null")
-                        return
-                    }
-                    Log.i(TAG, "[$pkg] FIRED: OkHttpClient.Builder.build — replacing hostnameVerifier")
+                    val client = param.result ?: return
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: OkHttpClient.Builder.build — replacing hostnameVerifier")
                     setField(client, "hostnameVerifier", HostnameVerifier { _: String, _: SSLSession -> true })
                 }
             }
@@ -52,12 +49,12 @@ object OkHttpHooks {
     }
 
     private fun hookTrustKit(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[OkHttp] hookTrustKit")
+        if (loggingEnabled) Log.d(TAG, "[OkHttp] hookTrustKit")
         tryHook("com.datatheorem.android.trustkit.pinning.OkHostnameVerifier", cl, "verify",
             String::class.java, SSLSession::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    Log.i(TAG, "[$pkg] FIRED: TrustKit OkHostnameVerifier.verify — returned true")
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: TrustKit OkHostnameVerifier.verify")
                     param.result = true
                 }
             }
@@ -66,7 +63,7 @@ object OkHttpHooks {
             Array<X509Certificate>::class.java, String::class.java,
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {
-                    Log.i(TAG, "[$pkg] FIRED: TrustKit PinningTrustManager.checkServerTrusted — bypassed")
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: TrustKit PinningTrustManager.checkServerTrusted")
                     param.result = null
                 }
             }

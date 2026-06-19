@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
@@ -17,6 +18,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.horizon.sslkillswitch.config.ConfigWriter
+import com.horizon.sslkillswitch.config.KEY_HOOK_NATIVE
+import com.horizon.sslkillswitch.config.KEY_HOOK_OKHTTP
+import com.horizon.sslkillswitch.config.KEY_HOOK_TRUSTMANAGER
+import com.horizon.sslkillswitch.config.KEY_HOOK_WEBVIEW
 import com.horizon.sslkillswitch.databinding.ActivityAppListBinding
 import com.horizon.sslkillswitch.databinding.ItemAppBinding
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +40,10 @@ class AppListActivity : AppCompatActivity() {
         val packageName: String,
         val label: String,
         var enabled: Boolean,
+        var hookTm: Boolean,
+        var hookOkHttp: Boolean,
+        var hookWebView: Boolean,
+        var hookNative: Boolean,
         var domains: String
     )
 
@@ -68,14 +77,22 @@ class AppListActivity : AppCompatActivity() {
                 .sortedBy { pm.getApplicationLabel(it).toString() }
 
             val enabledApps = ConfigWriter.getEnabledApps(this@AppListActivity)
+            val tmApps      = ConfigWriter.getHookCategoryApps(this@AppListActivity, KEY_HOOK_TRUSTMANAGER)
+            val okhttpApps  = ConfigWriter.getHookCategoryApps(this@AppListActivity, KEY_HOOK_OKHTTP)
+            val webviewApps = ConfigWriter.getHookCategoryApps(this@AppListActivity, KEY_HOOK_WEBVIEW)
+            val nativeApps  = ConfigWriter.getHookCategoryApps(this@AppListActivity, KEY_HOOK_NATIVE)
 
             val apps = packages.map { info ->
                 val pkg = info.packageName
                 AppInfo(
-                    packageName = pkg,
-                    label = pm.getApplicationLabel(info).toString(),
-                    enabled = enabledApps.contains(pkg),
-                    domains = ConfigWriter.getDomainsForApp(this@AppListActivity, pkg).joinToString(",")
+                    packageName  = pkg,
+                    label        = pm.getApplicationLabel(info).toString(),
+                    enabled      = enabledApps.contains(pkg),
+                    hookTm       = tmApps.contains(pkg),
+                    hookOkHttp   = okhttpApps.contains(pkg),
+                    hookWebView  = webviewApps.contains(pkg),
+                    hookNative   = nativeApps.contains(pkg),
+                    domains      = ConfigWriter.getDomainsForApp(this@AppListActivity, pkg).joinToString(",")
                 )
             }
 
@@ -102,9 +119,7 @@ class AppListActivity : AppCompatActivity() {
         private val items = mutableListOf<AppInfo>()
 
         fun submitList(list: List<AppInfo>) {
-            items.clear()
-            items.addAll(list)
-            notifyDataSetChanged()
+            items.clear(); items.addAll(list); notifyDataSetChanged()
         }
 
         inner class VH(val b: ItemAppBinding) : RecyclerView.ViewHolder(b.root)
@@ -117,19 +132,57 @@ class AppListActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val app = items[position]
             with(holder.b) {
-                tvAppName.text = app.label
+                tvAppName.text     = app.label
                 tvPackageName.text = app.packageName
-                switchEnabled.isChecked = app.enabled
+
+                // Clear listeners before setting check state
+                switchEnabled.setOnCheckedChangeListener(null)
+                chipTrustManager.setOnCheckedChangeListener(null)
+                chipOkHttp.setOnCheckedChangeListener(null)
+                chipWebView.setOnCheckedChangeListener(null)
+                chipNative.setOnCheckedChangeListener(null)
+
+                switchEnabled.isChecked    = app.enabled
+                chipTrustManager.isChecked = app.hookTm
+                chipOkHttp.isChecked       = app.hookOkHttp
+                chipWebView.isChecked      = app.hookWebView
+                chipNative.isChecked       = app.hookNative
+                layoutOptions.visibility   = if (app.enabled) View.VISIBLE else View.GONE
 
                 switchEnabled.setOnCheckedChangeListener { _, checked ->
                     app.enabled = checked
                     ConfigWriter.setAppEnabled(this@AppListActivity, app.packageName, checked)
+                    layoutOptions.visibility = if (checked) View.VISIBLE else View.GONE
+                    // Re-sync chip states after setAppEnabled sets defaults
+                    if (checked) {
+                        chipTrustManager.isChecked = true
+                        chipOkHttp.isChecked       = true
+                        chipWebView.isChecked       = true
+                        chipNative.isChecked        = true
+                        app.hookTm      = true; app.hookOkHttp  = true
+                        app.hookWebView = true; app.hookNative  = true
+                    }
                     if (showSelectedOnly) filterApps(b.etSearch.text.toString())
                 }
 
-                btnEditDomains.setOnClickListener {
-                    showDomainDialog(app)
+                chipTrustManager.setOnCheckedChangeListener { _, checked ->
+                    app.hookTm = checked
+                    ConfigWriter.setHookCategory(this@AppListActivity, KEY_HOOK_TRUSTMANAGER, app.packageName, checked)
                 }
+                chipOkHttp.setOnCheckedChangeListener { _, checked ->
+                    app.hookOkHttp = checked
+                    ConfigWriter.setHookCategory(this@AppListActivity, KEY_HOOK_OKHTTP, app.packageName, checked)
+                }
+                chipWebView.setOnCheckedChangeListener { _, checked ->
+                    app.hookWebView = checked
+                    ConfigWriter.setHookCategory(this@AppListActivity, KEY_HOOK_WEBVIEW, app.packageName, checked)
+                }
+                chipNative.setOnCheckedChangeListener { _, checked ->
+                    app.hookNative = checked
+                    ConfigWriter.setHookCategory(this@AppListActivity, KEY_HOOK_NATIVE, app.packageName, checked)
+                }
+
+                btnEditDomains.setOnClickListener { showDomainDialog(app) }
             }
         }
 
@@ -138,20 +191,18 @@ class AppListActivity : AppCompatActivity() {
             val domains = ConfigWriter.getDomainsForApp(ctx, app.packageName).toMutableSet()
 
             val chipGroup = ChipGroup(ctx)
-
             fun syncChips() {
                 chipGroup.removeAllViews()
                 for (d in domains.sorted()) {
                     chipGroup.addView(Chip(ctx).apply {
-                        text = d
-                        isCloseIconVisible = true
+                        text = d; isCloseIconVisible = true
                         setOnCloseIconClickListener { domains.remove(d); syncChips() }
                     })
                 }
             }
             syncChips()
 
-            val input = EditText(ctx).apply { hint = "example.com" }
+            val input  = EditText(ctx).apply { hint = "example.com" }
             val btnAdd = Button(ctx).apply { text = "Add" }
             btnAdd.setOnClickListener {
                 val d = input.text.toString().trim().lowercase()
@@ -163,12 +214,10 @@ class AppListActivity : AppCompatActivity() {
                 addView(input, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
                 addView(btnAdd)
             }
-
             val layout = LinearLayout(ctx).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(48, 16, 48, 8)
-                addView(chipGroup)
-                addView(inputRow)
+                addView(chipGroup); addView(inputRow)
             }
 
             AlertDialog.Builder(ctx)

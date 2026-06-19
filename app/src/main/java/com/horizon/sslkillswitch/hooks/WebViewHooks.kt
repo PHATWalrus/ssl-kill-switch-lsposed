@@ -11,15 +11,15 @@ private const val TAG = "SSLKillSwitch"
 object WebViewHooks {
 
     fun apply(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[WebView] registering hooks for $pkg")
+        if (loggingEnabled) Log.d(TAG, "[WebView] registering hooks for $pkg")
         hookWebViewClientSslError(cl, pkg)
     }
 
     private fun hookWebViewClientSslError(cl: ClassLoader, pkg: String) {
-        Log.d(TAG, "[WebView] hookWebViewClientSslError")
+        if (loggingEnabled) Log.d(TAG, "[WebView] hookWebViewClientSslError")
         val proceed = object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
-                Log.i(TAG, "[$pkg] FIRED: WebViewClient.onReceivedSslError — calling handler.proceed()")
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: WebViewClient.onReceivedSslError — calling handler.proceed()")
                 val handler = param.args[1] as? SslErrorHandler ?: return
                 handler.proceed()
                 param.result = null
