@@ -1,0 +1,12 @@
+app/build/tmp/*
+app/build/intermediates/*
+app/build/generated/*
+app/build/outputs/*
+.gradle/8.13/*
+.gradle/8.6/dependencies-accessors/fb54f69140960a17d4249afeff25b6a98b745e13/
+.gradle/9.0.0/*
+.gradle/9.1.0/*
+app/.cxx/*
+app/build/tmp/kotlin-classes/*
+.idea/*
+.gradle/

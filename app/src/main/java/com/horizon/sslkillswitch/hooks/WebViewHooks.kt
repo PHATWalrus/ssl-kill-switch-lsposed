@@ -4,29 +4,31 @@ import android.net.http.SslError
 import android.util.Log
 import android.webkit.SslErrorHandler
 import android.webkit.WebView
-import com.horizon.sslkillswitch.MainHook.Companion.TAG
-import io.github.libxposed.api.XposedInterface
+import de.robv.android.xposed.XC_MethodHook
+
+private const val TAG = "SSLKillSwitch"
 
 object WebViewHooks {
 
-    fun apply(xposed: XposedInterface, cl: ClassLoader, pkg: String) {
-        hookWebViewClientSslError(xposed, cl, pkg)
+    fun apply(cl: ClassLoader, pkg: String) {
+        Log.d(TAG, "[WebView] registering hooks for $pkg")
+        hookWebViewClientSslError(cl, pkg)
     }
 
-    private fun hookWebViewClientSslError(xposed: XposedInterface, cl: ClassLoader, pkg: String) {
-        val proceed = XposedInterface.Hooker { chain ->
-            Log.d(TAG, "[$pkg] WebViewClient.onReceivedSslError intercepted — proceeding")
-            val handler = chain.getArg(1) as? SslErrorHandler
-            if (handler != null) {
+    private fun hookWebViewClientSslError(cl: ClassLoader, pkg: String) {
+        Log.d(TAG, "[WebView] hookWebViewClientSslError")
+        val proceed = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                Log.i(TAG, "[$pkg] FIRED: WebViewClient.onReceivedSslError — calling handler.proceed()")
+                val handler = param.args[1] as? SslErrorHandler ?: return
                 handler.proceed()
-                null
-            } else {
-                chain.proceed()
+                param.result = null
             }
         }
-        val paramTypes = arrayOf(WebView::class.java, SslErrorHandler::class.java, SslError::class.java)
 
-        tryHook(xposed, "android.webkit.WebViewClient", cl, "onReceivedSslError", paramTypes, proceed)
-        tryHook(xposed, "androidx.webkit.WebViewClientCompat", cl, "onReceivedSslError", paramTypes, proceed)
+        tryHook("android.webkit.WebViewClient", cl, "onReceivedSslError",
+            WebView::class.java, SslErrorHandler::class.java, SslError::class.java, proceed)
+        tryHook("androidx.webkit.WebViewClientCompat", cl, "onReceivedSslError",
+            WebView::class.java, SslErrorHandler::class.java, SslError::class.java, proceed)
     }
 }

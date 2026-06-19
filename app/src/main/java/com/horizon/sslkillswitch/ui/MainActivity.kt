@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
         b.etProxyPort.setText(ConfigWriter.getProxyPort(this).toString())
         b.switchProxy.isChecked = ConfigWriter.isProxyEnabled(this)
         b.switchNativeHooks.isChecked = true
+        b.tvModuleStatus.text = "Module status: install via LSPosed"
     }
 
     private fun refreshSelectedApps() {
@@ -54,17 +55,21 @@ class MainActivity : AppCompatActivity() {
                 b.chipGroupSelectedApps.removeAllViews()
                 if (chips.isEmpty()) {
                     b.tvSelectedAppsLabel.visibility = View.VISIBLE
-                    b.tvSelectedAppsLabel.text = "No apps selected"
                 } else {
                     b.tvSelectedAppsLabel.visibility = View.GONE
                     chips.forEach { (pkg, label) ->
                         val chip = Chip(this@MainActivity).apply {
                             text = label
-                            isClickable = false
+                            isCloseIconVisible = true
+                            isClickable = true
                             isCheckable = false
                             setOnLongClickListener {
                                 Toast.makeText(this@MainActivity, pkg, Toast.LENGTH_SHORT).show()
                                 true
+                            }
+                            setOnCloseIconClickListener {
+                                ConfigWriter.setAppEnabled(this@MainActivity, pkg, false)
+                                refreshSelectedApps()
                             }
                         }
                         b.chipGroupSelectedApps.addView(chip)
@@ -85,14 +90,15 @@ class MainActivity : AppCompatActivity() {
 
         b.btnFlushIptables.setOnClickListener {
             val host = b.etProxyHost.text.toString().trim()
-            IptablesManager.removeGlobalRedirect(host)
+            val port = b.etProxyPort.text.toString().toIntOrNull() ?: 8080
+            IptablesManager.removeGlobalRedirect(host, port)
             IptablesManager.removeAllRules()
                 .onSuccess { toast("iptables rules flushed") }
                 .onFailure { toast("Flush failed: ${it.message}") }
         }
 
-        b.btnDumpNat.setOnClickListener {
-            b.tvNatDump.text = IptablesManager.dumpNatTable()
+        b.btnViewRules.setOnClickListener {
+            startActivity(Intent(this, ActiveRulesActivity::class.java))
         }
 
         b.switchProxy.setOnCheckedChangeListener { _, _ -> saveProxyConfig() }
@@ -113,7 +119,7 @@ class MainActivity : AppCompatActivity() {
 
         saveProxyConfig()
 
-        IptablesManager.applyGlobalRedirect(host)
+        IptablesManager.applyGlobalRedirect(host, port)
             .onFailure { toast("Global redirect failed: ${it.message}") }
 
         val enabledApps = ConfigWriter.getEnabledApps(this)

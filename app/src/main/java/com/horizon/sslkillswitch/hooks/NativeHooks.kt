@@ -1,7 +1,7 @@
 package com.horizon.sslkillswitch.hooks
 
 import android.util.Log
-import com.horizon.sslkillswitch.MainHook.Companion.TAG
+private const val TAG = "SSLKillSwitch"
 
 object NativeHooks {
 

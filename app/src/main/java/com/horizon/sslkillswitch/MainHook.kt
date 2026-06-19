@@ -5,27 +5,27 @@ import com.horizon.sslkillswitch.hooks.NativeHooks
 import com.horizon.sslkillswitch.hooks.OkHttpHooks
 import com.horizon.sslkillswitch.hooks.TrustManagerHooks
 import com.horizon.sslkillswitch.hooks.WebViewHooks
-import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.XposedModuleInterface
+import de.robv.android.xposed.IXposedHookLoadPackage
+import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 
-class MainHook : XposedModule() {
+internal const val TAG = "SSLKillSwitch"
 
-    override fun onPackageLoaded(param: XposedModuleInterface.PackageLoadedParam) {
-        val pkg = param.packageName
+class MainHook : IXposedHookLoadPackage {
+
+    override fun handleLoadPackage(lpparam: LoadPackageParam) {
+        val pkg = lpparam.packageName
         if (pkg == "com.horizon.sslkillswitch") return
-        if (pkg.startsWith("android") && pkg != "android") return
 
-        Log.d(TAG, "Hooking $pkg")
+        Log.i(TAG, "--- MODULE ALIVE: $pkg ---")
 
-        val cl = param.defaultClassLoader
-
-        TrustManagerHooks.apply(this, cl, pkg)
-        OkHttpHooks.apply(this, cl, pkg)
-        WebViewHooks.apply(this, cl, pkg)
-        NativeHooks.apply(cl, pkg)
-    }
-
-    companion object {
-        const val TAG = "SSLKillSwitch"
+        try {
+            val cl = lpparam.classLoader
+            TrustManagerHooks.apply(cl, pkg)
+            OkHttpHooks.apply(cl, pkg)
+            WebViewHooks.apply(cl, pkg)
+            NativeHooks.apply(cl, pkg)
+        } catch (t: Throwable) {
+            Log.e(TAG, "hook failed pkg=$pkg", t)
+        }
     }
 }

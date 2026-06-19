@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:padding="16dp">
 
     <LinearLayout
@@ -17,6 +18,56 @@
             android:textSize="22sp"
             android:textStyle="bold"
             android:layout_marginBottom="16dp" />
+
+        <!-- Module status -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Module Status"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvModuleStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Not connected"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvFrameworkInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnHotReload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hot Reload"
+                    android:layout_marginTop="8dp"
+                    android:enabled="false"
+                    android:visibility="gone"
+                    style="@style/Widget.Material3.Button.OutlinedButton" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- App selection -->
         <com.google.android.material.card.MaterialCardView
@@ -191,35 +242,13 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- NAT table dump -->
-        <com.google.android.material.card.MaterialCardView
+        <!-- Active rules view -->
+        <Button
+            android:id="@+id/btnViewRules"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <Button
-                    android:id="@+id/btnDumpNat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dump NAT Table"
-                    android:layout_marginBottom="8dp"
-                    style="@style/Widget.Material3.Button.TonalButton" />
-
-                <TextView
-                    android:id="@+id/tvNatDump"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:textSize="11sp"
-                    android:text="" />
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            android:layout_height="wrap_content"
+            android:text="View Active Rules"
+            style="@style/Widget.Material3.Button.TonalButton" />
 
     </LinearLayout>
 </ScrollView>

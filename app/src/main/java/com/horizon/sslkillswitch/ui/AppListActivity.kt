@@ -7,10 +7,15 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.horizon.sslkillswitch.config.ConfigWriter
 import com.horizon.sslkillswitch.databinding.ActivityAppListBinding
 import com.horizon.sslkillswitch.databinding.ItemAppBinding
@@ -24,6 +29,7 @@ class AppListActivity : AppCompatActivity() {
     private lateinit var b: ActivityAppListBinding
     private val adapter = AppAdapter()
     private val allApps = mutableListOf<AppInfo>()
+    private var showSelectedOnly = false
 
     data class AppInfo(
         val packageName: String,
@@ -46,6 +52,11 @@ class AppListActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
+        b.chipSelectedOnly.setOnCheckedChangeListener { _, checked ->
+            showSelectedOnly = checked
+            filterApps(b.etSearch.text.toString())
+        }
+
         loadApps()
     }
 
@@ -53,7 +64,7 @@ class AppListActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             val pm = packageManager
             val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                .filter { (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 } // user apps only
+                .filter { (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 }
                 .sortedBy { pm.getApplicationLabel(it).toString() }
 
             val enabledApps = ConfigWriter.getEnabledApps(this@AppListActivity)
@@ -64,8 +75,7 @@ class AppListActivity : AppCompatActivity() {
                     packageName = pkg,
                     label = pm.getApplicationLabel(info).toString(),
                     enabled = enabledApps.contains(pkg),
-                    domains = ConfigWriter.getDomainsForApp(this@AppListActivity, pkg)
-                        .joinToString(",")
+                    domains = ConfigWriter.getDomainsForApp(this@AppListActivity, pkg).joinToString(",")
                 )
             }
 
@@ -78,13 +88,12 @@ class AppListActivity : AppCompatActivity() {
     }
 
     private fun filterApps(query: String) {
-        val filtered = if (query.isEmpty()) {
-            allApps.toList()
-        } else {
-            allApps.filter {
+        val filtered = allApps.filter {
+            val matchesSearch = query.isEmpty() ||
                 it.label.contains(query, ignoreCase = true) ||
-                    it.packageName.contains(query, ignoreCase = true)
-            }
+                it.packageName.contains(query, ignoreCase = true)
+            val matchesFilter = !showSelectedOnly || it.enabled
+            matchesSearch && matchesFilter
         }
         adapter.submitList(filtered)
     }
@@ -115,6 +124,7 @@ class AppListActivity : AppCompatActivity() {
                 switchEnabled.setOnCheckedChangeListener { _, checked ->
                     app.enabled = checked
                     ConfigWriter.setAppEnabled(this@AppListActivity, app.packageName, checked)
+                    if (showSelectedOnly) filterApps(b.etSearch.text.toString())
                 }
 
                 btnEditDomains.setOnClickListener {
@@ -124,27 +134,49 @@ class AppListActivity : AppCompatActivity() {
         }
 
         private fun showDomainDialog(app: AppInfo) {
-            val current = ConfigWriter.getDomainsForApp(
-                this@AppListActivity, app.packageName
-            ).joinToString("\n")
+            val ctx = this@AppListActivity
+            val domains = ConfigWriter.getDomainsForApp(ctx, app.packageName).toMutableSet()
 
-            val input = android.widget.EditText(this@AppListActivity).apply {
-                hint = "One domain per line (empty = all)"
-                setText(current)
-                setPadding(48, 16, 48, 16)
+            val chipGroup = ChipGroup(ctx)
+
+            fun syncChips() {
+                chipGroup.removeAllViews()
+                for (d in domains.sorted()) {
+                    chipGroup.addView(Chip(ctx).apply {
+                        text = d
+                        isCloseIconVisible = true
+                        setOnCloseIconClickListener { domains.remove(d); syncChips() }
+                    })
+                }
+            }
+            syncChips()
+
+            val input = EditText(ctx).apply { hint = "example.com" }
+            val btnAdd = Button(ctx).apply { text = "Add" }
+            btnAdd.setOnClickListener {
+                val d = input.text.toString().trim().lowercase()
+                if (d.isNotEmpty()) { domains.add(d); input.setText(""); syncChips() }
             }
 
-            AlertDialog.Builder(this@AppListActivity)
-                .setTitle("Domain filter — ${app.label}")
-                .setMessage("Leave empty to bypass all domains.\nEnter suffixes like: example.com")
-                .setView(input)
+            val inputRow = LinearLayout(ctx).apply {
+                orientation = LinearLayout.HORIZONTAL
+                addView(input, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+                addView(btnAdd)
+            }
+
+            val layout = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(48, 16, 48, 8)
+                addView(chipGroup)
+                addView(inputRow)
+            }
+
+            AlertDialog.Builder(ctx)
+                .setTitle("Domains — ${app.label}")
+                .setMessage("Leave empty to bypass all. Suffix match: example.com")
+                .setView(layout)
                 .setPositiveButton("Save") { _, _ ->
-                    val domains = input.text.toString()
-                        .lines()
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() }
-                        .toSet()
-                    ConfigWriter.setDomainsForApp(this@AppListActivity, app.packageName, domains)
+                    ConfigWriter.setDomainsForApp(ctx, app.packageName, domains)
                     app.domains = domains.joinToString(",")
                 }
                 .setNegativeButton("Cancel", null)

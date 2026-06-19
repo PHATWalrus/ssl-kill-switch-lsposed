@@ -2,6 +2,7 @@ package com.horizon.sslkillswitch.iptables
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 
 data class IptablesRule(
     val uid: Int,
@@ -13,42 +14,44 @@ data class IptablesRule(
 object IptablesManager {
 
     private val activeRules = mutableListOf<IptablesRule>()
+    private const val TAG = "IptablesManager"
 
     fun applyRule(rule: IptablesRule): Result<Unit> = runCatching {
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
-        exec("iptables -t nat -A OUTPUT -m owner --uid-owner ${rule.uid} -p tcp -j DNAT --to-destination $dest")
-        exec("ip6tables -t nat -A OUTPUT -m owner --uid-owner ${rule.uid} -p tcp -j DNAT --to-destination $dest")
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
         synchronized(activeRules) { activeRules.add(rule) }
     }
 
     fun removeRule(rule: IptablesRule): Result<Unit> = runCatching {
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
-        exec("iptables -t nat -D OUTPUT -m owner --uid-owner ${rule.uid} -p tcp -j DNAT --to-destination $dest")
-        exec("ip6tables -t nat -D OUTPUT -m owner --uid-owner ${rule.uid} -p tcp -j DNAT --to-destination $dest")
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
         synchronized(activeRules) { activeRules.remove(rule) }
     }
 
-    fun applyGlobalRedirect(destHost: String): Result<Unit> = runCatching {
-        exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:443")
-        exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:80")
-        exec("iptables -t nat -A POSTROUTING -p tcp --dport 443 -j MASQUERADE")
-        exec("iptables -t nat -A POSTROUTING -p tcp --dport 80 -j MASQUERADE")
+    // Redirect all TCP 80/443 to proxy. Excludes traffic already destined for proxy to avoid loop.
+    fun applyGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:$destPort")
+        exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
     }
 
-    fun removeGlobalRedirect(destHost: String): Result<Unit> = runCatching {
-        exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:443")
-        exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:80")
-        exec("iptables -t nat -D POSTROUTING -p tcp --dport 443 -j MASQUERADE")
-        exec("iptables -t nat -D POSTROUTING -p tcp --dport 80 -j MASQUERADE")
+    fun removeGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
+        exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:$destPort")
+        exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
     }
 
     fun removeAllRules(): Result<Unit> = runCatching {
         synchronized(activeRules) {
-            activeRules.toList().forEach { rule ->
-                removeRule(rule).getOrNull()
-            }
+            activeRules.toList().forEach { removeRule(it).getOrNull() }
             activeRules.clear()
         }
+    }
+
+    fun flushAll(): Result<Unit> = runCatching {
+        exec("iptables -t nat -F OUTPUT")
+        exec("ip6tables -t nat -F OUTPUT")
+        synchronized(activeRules) { activeRules.clear() }
     }
 
     fun getActiveRules(): List<IptablesRule> = synchronized(activeRules) { activeRules.toList() }
@@ -67,6 +70,7 @@ object IptablesManager {
     private fun exec(cmd: String) {
         val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
         val exitCode = proc.waitFor()
+        Log.d(TAG,"$cmd exit code: $exitCode")
         if (exitCode != 0) {
             val err = proc.errorStream.bufferedReader().readText()
             throw RuntimeException("Command '$cmd' failed (exit $exitCode): $err")
