@@ -20,6 +20,8 @@ object IptablesManager {
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
         exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
         exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
+        exec("iptables -t nat -A POSTROUTING -p tcp --dport 443 -j MASQUERADE")
+        exec("iptables -t nat -A POSTROUTING -p tcp --dport 80 -j MASQUERADE")
         synchronized(activeRules) { activeRules.add(rule) }
     }
 
@@ -27,6 +29,7 @@ object IptablesManager {
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
         exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
         exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
+
         synchronized(activeRules) { activeRules.remove(rule) }
     }
 
@@ -34,6 +37,8 @@ object IptablesManager {
     fun applyGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
         exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:$destPort")
         exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
+        exec("iptables -t nat -A POSTROUTING -p tcp --dport 443 -j MASQUERADE")
+        exec("iptables -t nat -A POSTROUTING -p tcp --dport 80 -j MASQUERADE")
     }
 
     fun removeGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
