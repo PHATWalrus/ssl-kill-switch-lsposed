@@ -9,7 +9,10 @@ object NativeHooks {
     private var loaded = false
 
     fun loadLib(pkg: String): Boolean {
-        if (loaded) return true
+        if (loaded) {
+            if (loggingEnabled) Log.d(TAG, "[$pkg] native lib already loaded — skipping System.loadLibrary")
+            return true
+        }
         return try {
             System.loadLibrary("ssl_kill_switch")
             loaded = true

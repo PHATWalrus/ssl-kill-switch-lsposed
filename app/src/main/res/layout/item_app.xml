@@ -49,75 +49,131 @@
 
         </LinearLayout>
 
-        <!-- Row 2: hook categories + domains — visible only when app is enabled -->
+        <!-- Row 2: hook options — visible only when app is enabled -->
         <LinearLayout
             android:id="@+id/layoutOptions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:orientation="vertical"
             android:layout_marginTop="8dp"
             android:visibility="gone">
 
-            <!-- Hook category chips -->
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chipGroupCategories"
-                android:layout_width="0dp"
+            <!-- Row 2a: hook category chips + domains button -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                app:singleSelection="false"
-                app:singleLine="false">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipTrustManager"
-                    style="@style/Widget.Material3.Chip.Filter"
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupCategories"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:singleSelection="false"
+                    app:singleLine="false">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTrustManager"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TrustMgr"
+                        app:chipBackgroundColor="@color/chip_hook_bg"
+                        app:chipStrokeColor="@color/chip_hook_stroke"
+                        app:chipStrokeWidth="1.5dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipOkHttp"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OkHttp"
+                        app:chipBackgroundColor="@color/chip_hook_bg"
+                        app:chipStrokeColor="@color/chip_hook_stroke"
+                        app:chipStrokeWidth="1.5dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipWebView"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="WebView"
+                        app:chipBackgroundColor="@color/chip_hook_bg"
+                        app:chipStrokeColor="@color/chip_hook_stroke"
+                        app:chipStrokeWidth="1.5dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipNative"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Native"
+                        app:chipBackgroundColor="@color/chip_hook_bg"
+                        app:chipStrokeColor="@color/chip_hook_stroke"
+                        app:chipStrokeWidth="1.5dp" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <Button
+                    android:id="@+id/btnEditDomains"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TrustMgr"
-                    app:chipBackgroundColor="@color/chip_hook_bg"
-                    app:chipStrokeColor="@color/chip_hook_stroke"
-                    app:chipStrokeWidth="1.5dp" />
+                    android:layout_marginStart="8dp"
+                    android:text="Domains"
+                    android:textSize="12sp"
+                    style="@style/Widget.Material3.Button.OutlinedButton" />
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipOkHttp"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="OkHttp"
-                    app:chipBackgroundColor="@color/chip_hook_bg"
-                    app:chipStrokeColor="@color/chip_hook_stroke"
-                    app:chipStrokeWidth="1.5dp" />
+            </LinearLayout>
 
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipWebView"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="WebView"
-                    app:chipBackgroundColor="@color/chip_hook_bg"
-                    app:chipStrokeColor="@color/chip_hook_stroke"
-                    app:chipStrokeWidth="1.5dp" />
-
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chipNative"
-                    style="@style/Widget.Material3.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Native"
-                    app:chipBackgroundColor="@color/chip_hook_bg"
-                    app:chipStrokeColor="@color/chip_hook_stroke"
-                    app:chipStrokeWidth="1.5dp" />
-
-            </com.google.android.material.chip.ChipGroup>
-
-            <Button
-                android:id="@+id/btnEditDomains"
-                android:layout_width="wrap_content"
+            <!-- Row 2b: Flutter bypass mode — visible only when Native chip is checked -->
+            <LinearLayout
+                android:id="@+id/layoutFlutterMode"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="Domains"
-                android:textSize="12sp"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Flutter bypass:"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="8dp"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupFlutterMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true"
+                    app:selectionRequired="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipFlutterNative"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="In-Mem"
+                        app:chipBackgroundColor="@color/chip_hook_bg"
+                        app:chipStrokeColor="@color/chip_hook_stroke"
+                        app:chipStrokeWidth="1.5dp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipFlutterKotlin"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="File Patch"
+                        app:chipBackgroundColor="@color/chip_hook_bg"
+                        app:chipStrokeColor="@color/chip_hook_stroke"
+                        app:chipStrokeWidth="1.5dp" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
 
         </LinearLayout>
 

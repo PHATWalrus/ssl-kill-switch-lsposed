@@ -185,13 +185,22 @@ static long hooked_SSL_get_verify_result(const SSL*) { return 0; }
 static int  hooked_X509_verify_cert(X509_STORE_CTX*)  { return 1; }
 
 static void try_hook_in_lib(const char* lib_substr) {
+    LOGI("try_hook_in_lib: scanning '%s'", lib_substr);
     void* h = dlopen(lib_substr, RTLD_NOW | RTLD_NOLOAD);
+    if (h) LOGI("try_hook_in_lib: dlopen RTLD_NOLOAD succeeded for '%s' @ %p", lib_substr, h);
+    else   LOGI("try_hook_in_lib: dlopen RTLD_NOLOAD failed for '%s' — will try ELF scan + RTLD_DEFAULT", lib_substr);
+
     auto resolve = [&](const char* sym) -> void* {
         void* a = h ? dlsym(h, sym) : nullptr;
-        if (!a) a = find_symbol_in_maps(lib_substr, sym);
-        if (!a) a = dlsym(RTLD_DEFAULT, sym);
+        if (a) { LOGI("  resolve '%s' via dlsym(handle) @ %p", sym, a); return a; }
+        a = find_symbol_in_maps(lib_substr, sym);
+        if (a) { LOGI("  resolve '%s' via ELF scan @ %p", sym, a); return a; }
+        a = dlsym(RTLD_DEFAULT, sym);
+        if (a) LOGI("  resolve '%s' via RTLD_DEFAULT @ %p", sym, a);
+        else   LOGI("  resolve '%s' — NOT FOUND in '%s'", sym, lib_substr);
         return a;
     };
+
     if (void* t = resolve("SSL_CTX_new")) {
         orig_SSL_CTX_new = reinterpret_cast<SSL_CTX_new_fn>(t);
         write_trampoline(t, reinterpret_cast<void*>(hooked_SSL_CTX_new));
@@ -207,6 +216,7 @@ static void try_hook_in_lib(const char* lib_substr) {
     if (void* t = resolve("X509_verify_cert"))
         write_trampoline(t, reinterpret_cast<void*>(hooked_X509_verify_cert));
     if (h) dlclose(h);
+    LOGI("try_hook_in_lib: done for '%s'", lib_substr);
 }
 
 // ─── Flutter: pattern-based ssl_verify_peer_cert bypass ──────────────────────
@@ -290,7 +300,7 @@ static bool patch_return_zero(void* addr) {
     // MOVS R0, #0 ; BX LR
     const uint8_t  ins[4] = { 0x00, 0x20, 0x70, 0x47 };
     const size_t   sz     = sizeof(ins);
-#elif defined(__x86_64__)
+#elif defined(__x86_64__) || defined(__i386__)
     // XOR EAX, EAX ; RET
     const uint8_t  ins[3] = { 0x31, 0xC0, 0xC3 };
     const size_t   sz     = sizeof(ins);
@@ -309,6 +319,7 @@ static const char* FLUTTER_PAT_ARM64[] = {
     "F? 0F 1C F8 F? 5? 01 A9 F? 5? 02 A9 F? ?? 03 A9 ?? ?? ?? ?? 68 1A 40 F9",
     "F? 43 01 D1 FE 67 01 A9 F8 5F 02 A9 F6 57 03 A9 F4 4F 04 A9 13 00 40 F9 F4 03 00 AA 68 1A 40 F9",
     "FF 43 01 D1 FE 67 01 A9 ?? ?? 06 94 ?? 7? 06 94 68 1A 40 F9 15 15 41 F9 B5 00 00 B4 B6 4A 40 F9",
+    "FF C3 01 D1 FD 7B 01 A9 6A A1 0B 94 08 0A 80 52 48 00 00 39 1A 50 40 F9 DA 02 00 B4 48 03 40 F9",
 };
 static const char* FLUTTER_PAT_ARM[] = {
     "2D E9 F? 4? D0 F8 00 80 81 46 D8 F8 18 00 D0 F8",
@@ -316,6 +327,10 @@ static const char* FLUTTER_PAT_ARM[] = {
 static const char* FLUTTER_PAT_X64[] = {
     "55 41 57 41 56 41 55 41 54 53 50 49 89 f? 4? 8b ?? 4? 8b 4? 30 4c 8b ?? ?? 0? 00 00 4d 85 ?? 74 1? 4d 8b",
     "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FF 48 8B 1F 48 8B 43 30 4C 8B A0 28 02 00 00 4D 85 E4 74",
+    "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FE 4C 8B 27 49 8B 44 24 30 48 8B 98 D0 01 00 00 48 85 DB",
+};
+static const char* FLUTTER_PAT_X86[] = {
+    "55 89 E5 53 57 56 83 E4 F0 83 EC 20 E8 00 00 00 00 5B 81 C3 2B 79 66 00 8B 7D 08 8B 17 8B 42 18 8B 80 88 01",
 };
 
 static volatile bool s_flutter_patched = false;
@@ -342,6 +357,8 @@ static bool try_patch_flutter(const char* pkg_filter = nullptr) {
     const char** pats=FLUTTER_PAT_ARM;  size_t np=sizeof(FLUTTER_PAT_ARM)/sizeof(*FLUTTER_PAT_ARM);   int th=1;
 #elif defined(__x86_64__)
     const char** pats=FLUTTER_PAT_X64;  size_t np=sizeof(FLUTTER_PAT_X64)/sizeof(*FLUTTER_PAT_X64);   int th=0;
+#elif defined(__i386__)
+    const char** pats=FLUTTER_PAT_X86;  size_t np=sizeof(FLUTTER_PAT_X86)/sizeof(*FLUTTER_PAT_X86);   int th=0;
 #else
     LOGE("Flutter: unsupported arch"); return false;
 #endif
@@ -368,21 +385,32 @@ static bool try_patch_flutter(const char* pkg_filter = nullptr) {
 // ─── Main hook orchestrator ───────────────────────────────────────────────────
 
 static void scan_and_hook() {
+    LOGI("scan_and_hook: starting symbol-based SSL hooks");
+
     // Symbol-based: system BoringSSL / OpenSSL, React Native
     try_hook_in_lib("libssl.so");
     try_hook_in_lib("libcrypto.so");
     try_hook_in_lib("librnssl.so");
 
-    // RTLD_DEFAULT catches anything already linked
-    if (void* t = dlsym(RTLD_DEFAULT, "SSL_CTX_set_custom_verify"))
+    // RTLD_DEFAULT sweep — catches anything already linked into the process
+    LOGI("scan_and_hook: RTLD_DEFAULT sweep for remaining SSL symbols");
+    if (void* t = dlsym(RTLD_DEFAULT, "SSL_CTX_set_custom_verify")) {
+        LOGI("scan_and_hook: SSL_CTX_set_custom_verify via RTLD_DEFAULT @ %p", t);
         write_trampoline(t, reinterpret_cast<void*>(hooked_SSL_CTX_set_custom_verify));
-    if (void* t = dlsym(RTLD_DEFAULT, "SSL_get_verify_result"))
+    }
+    if (void* t = dlsym(RTLD_DEFAULT, "SSL_get_verify_result")) {
+        LOGI("scan_and_hook: SSL_get_verify_result via RTLD_DEFAULT @ %p", t);
         write_trampoline(t, reinterpret_cast<void*>(hooked_SSL_get_verify_result));
-    if (void* t = dlsym(RTLD_DEFAULT, "X509_verify_cert"))
+    }
+    if (void* t = dlsym(RTLD_DEFAULT, "X509_verify_cert")) {
+        LOGI("scan_and_hook: X509_verify_cert via RTLD_DEFAULT @ %p", t);
         write_trampoline(t, reinterpret_cast<void*>(hooked_X509_verify_cert));
+    }
 
     // Flutter: pattern-scan (only succeeds if libflutter.so is already mapped)
+    LOGI("scan_and_hook: attempting early Flutter pattern scan");
     try_patch_flutter();
+    LOGI("scan_and_hook: done");
 }
 
 // ─── JNI entry points ─────────────────────────────────────────────────────────

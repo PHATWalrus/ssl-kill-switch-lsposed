@@ -34,6 +34,14 @@
             android:exported="false"
             android:label="Active Rules" />
 
+        <!-- Config provider: serves SharedPreferences to hooked processes via Binder IPC.
+             XSharedPreferences reads the prefs file directly which SELinux blocks cross-app.
+             A ContentProvider query crosses via Binder; Android handles the SELinux boundary. -->
+        <provider
+            android:name=".ConfigProvider"
+            android:authorities="com.horizon.sslkillswitch.config"
+            android:exported="true" />
+
         <!-- LSPosed module metadata -->
         <meta-data
             android:name="xposedmodule"

@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.horizon.sslkillswitch.config.ConfigWriter
+import com.horizon.sslkillswitch.config.FLUTTER_MODE_KOTLIN
+import com.horizon.sslkillswitch.config.FLUTTER_MODE_NATIVE
 import com.horizon.sslkillswitch.config.KEY_HOOK_NATIVE
 import com.horizon.sslkillswitch.config.KEY_HOOK_OKHTTP
 import com.horizon.sslkillswitch.config.KEY_HOOK_TRUSTMANAGER
@@ -44,6 +46,7 @@ class AppListActivity : AppCompatActivity() {
         var hookOkHttp: Boolean,
         var hookWebView: Boolean,
         var hookNative: Boolean,
+        var flutterMode: String,
         var domains: String
     )
 
@@ -92,6 +95,7 @@ class AppListActivity : AppCompatActivity() {
                     hookOkHttp   = okhttpApps.contains(pkg),
                     hookWebView  = webviewApps.contains(pkg),
                     hookNative   = nativeApps.contains(pkg),
+                    flutterMode  = ConfigWriter.getFlutterMode(this@AppListActivity, pkg),
                     domains      = ConfigWriter.getDomainsForApp(this@AppListActivity, pkg).joinToString(",")
                 )
             }
@@ -135,25 +139,31 @@ class AppListActivity : AppCompatActivity() {
                 tvAppName.text     = app.label
                 tvPackageName.text = app.packageName
 
-                // Clear listeners before setting check state
+                // Clear all listeners before setting state
                 switchEnabled.setOnCheckedChangeListener(null)
                 chipTrustManager.setOnCheckedChangeListener(null)
                 chipOkHttp.setOnCheckedChangeListener(null)
                 chipWebView.setOnCheckedChangeListener(null)
                 chipNative.setOnCheckedChangeListener(null)
+                chipFlutterNative.setOnCheckedChangeListener(null)
+                chipFlutterKotlin.setOnCheckedChangeListener(null)
 
                 switchEnabled.isChecked    = app.enabled
                 chipTrustManager.isChecked = app.hookTm
                 chipOkHttp.isChecked       = app.hookOkHttp
                 chipWebView.isChecked      = app.hookWebView
                 chipNative.isChecked       = app.hookNative
-                layoutOptions.visibility   = if (app.enabled) View.VISIBLE else View.GONE
+
+                chipFlutterNative.isChecked = app.flutterMode == FLUTTER_MODE_NATIVE
+                chipFlutterKotlin.isChecked = app.flutterMode == FLUTTER_MODE_KOTLIN
+
+                layoutOptions.visibility     = if (app.enabled) View.VISIBLE else View.GONE
+                layoutFlutterMode.visibility = if (app.enabled && app.hookNative) View.VISIBLE else View.GONE
 
                 switchEnabled.setOnCheckedChangeListener { _, checked ->
                     app.enabled = checked
                     ConfigWriter.setAppEnabled(this@AppListActivity, app.packageName, checked)
                     layoutOptions.visibility = if (checked) View.VISIBLE else View.GONE
-                    // Re-sync chip states after setAppEnabled sets defaults
                     if (checked) {
                         chipTrustManager.isChecked = true
                         chipOkHttp.isChecked       = true
@@ -161,6 +171,9 @@ class AppListActivity : AppCompatActivity() {
                         chipNative.isChecked        = true
                         app.hookTm      = true; app.hookOkHttp  = true
                         app.hookWebView = true; app.hookNative  = true
+                        layoutFlutterMode.visibility = View.VISIBLE
+                    } else {
+                        layoutFlutterMode.visibility = View.GONE
                     }
                     if (showSelectedOnly) filterApps(b.etSearch.text.toString())
                 }
@@ -180,6 +193,20 @@ class AppListActivity : AppCompatActivity() {
                 chipNative.setOnCheckedChangeListener { _, checked ->
                     app.hookNative = checked
                     ConfigWriter.setHookCategory(this@AppListActivity, KEY_HOOK_NATIVE, app.packageName, checked)
+                    layoutFlutterMode.visibility = if (checked) View.VISIBLE else View.GONE
+                }
+
+                chipFlutterNative.setOnCheckedChangeListener { _, checked ->
+                    if (checked) {
+                        app.flutterMode = FLUTTER_MODE_NATIVE
+                        ConfigWriter.setFlutterMode(this@AppListActivity, app.packageName, FLUTTER_MODE_NATIVE)
+                    }
+                }
+                chipFlutterKotlin.setOnCheckedChangeListener { _, checked ->
+                    if (checked) {
+                        app.flutterMode = FLUTTER_MODE_KOTLIN
+                        ConfigWriter.setFlutterMode(this@AppListActivity, app.packageName, FLUTTER_MODE_KOTLIN)
+                    }
                 }
 
                 btnEditDomains.setOnClickListener { showDomainDialog(app) }
