@@ -50,7 +50,7 @@ object IptablesManager {
 
     fun flushAll(): Result<Unit> = runCatching {
         exec("iptables -t nat -F OUTPUT")
-        exec("ip6tables -t nat -F OUTPUT")
+        //exec("ip6tables -t nat -F OUTPUT")
         synchronized(activeRules) { activeRules.clear() }
     }
 

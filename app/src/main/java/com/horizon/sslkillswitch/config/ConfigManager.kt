@@ -65,6 +65,7 @@ object ConfigWriter {
         val p = prefs(context)
         val apps = p.getStringSet(KEY_ENABLED_APPS, mutableSetOf())!!.toMutableSet()
         if (enabled) {
+            Log.d(TAG, "Add app $packageName")
             apps.add(packageName)
             // Enable all hook categories when first enabling an app
             commit(context) {
