@@ -1,3 +1,0 @@
-C:/Users/davide.caputo/developer/ssl-kill-switch-lsposed/app/.cxx/Debug/3k536k4m/arm64-v8a/CMakeFiles/ssl_kill_switch.dir
-C:/Users/davide.caputo/developer/ssl-kill-switch-lsposed/app/.cxx/Debug/3k536k4m/arm64-v8a/CMakeFiles/edit_cache.dir
-C:/Users/davide.caputo/developer/ssl-kill-switch-lsposed/app/.cxx/Debug/3k536k4m/arm64-v8a/CMakeFiles/rebuild_cache.dir
