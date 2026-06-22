@@ -33,29 +33,36 @@ object ConfigWriter {
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /**
-     * commit() + setReadable(true, false) after every write.
-     *
-     * XSharedPreferences in LSPosed reads the file via its root daemon. That works
-     * regardless of unix permissions, BUT older LSPosed builds / compat paths fall
-     * back to direct file read. Making the file world-readable ensures both paths work.
-     *
-     * commit() is used instead of apply() so the file is on disk before setReadable()
-     * is called — apply() is async and the file may not exist yet at chmod time.
-     */
+    // commit() is used instead of apply() — synchronous, file on disk before returning.
     private fun commit(context: Context, block: android.content.SharedPreferences.Editor.() -> Unit) {
         val ok = prefs(context).edit().apply(block).run { commit() }
         if (!ok) Log.e(TAG, "ConfigWriter: SharedPreferences.commit() returned false")
-        makeReadable(context)
+        logPrefsPath(context)
     }
 
-    private fun makeReadable(context: Context) {
-        runCatching {
-            val f = File(context.applicationInfo.dataDir, "shared_prefs/$PREFS_NAME.xml")
-            val readable = f.setReadable(true, false)
-            Log.d(TAG, "ConfigWriter: makeReadable ${f.absolutePath} → $readable (exists=${f.exists()})")
-        }.onFailure {
-            Log.w(TAG, "ConfigWriter: makeReadable failed — ${it.message}")
+    private fun logPrefsPath(context: Context) {
+        if (Log.isLoggable(TAG, Log.DEBUG)) {
+            val f = prefsFile(context)
+            Log.d(TAG, "ConfigWriter: prefs ${f.absolutePath} exists=${f.exists()}")
+        }
+    }
+
+    private fun prefsFile(context: Context) =
+        File(context.filesDir.parentFile, "shared_prefs/$PREFS_NAME.xml")
+
+    /**
+     * Write initial defaults if the prefs file doesn't exist yet.
+     * SharedPreferences only flushes to disk on actual changes — on a fresh install
+     * the file is absent until the first real commit, which breaks XSharedPreferences.
+     * Call from Application.onCreate() to guarantee the file exists before any hook reads it.
+     */
+    fun ensurePrefsFile(context: Context) {
+        val p = prefs(context)
+        if (!prefsFile(context).exists()) {
+            p.edit()
+                .putBoolean(KEY_LOGGING_ENABLED, p.getBoolean(KEY_LOGGING_ENABLED, true))
+                .commit()
+            Log.i(TAG, "ConfigWriter: prefs file initialized at ${prefsFile(context).absolutePath}")
         }
     }
 

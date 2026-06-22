@@ -14,6 +14,7 @@ data class IptablesRule(
 object IptablesManager {
 
     private val activeRules = mutableListOf<IptablesRule>()
+    @Volatile private var globalRedirect: Pair<String, Int>? = null
     private const val TAG = "IptablesManager"
 
     fun applyRule(rule: IptablesRule): Result<Unit> = runCatching {
@@ -27,9 +28,10 @@ object IptablesManager {
 
     fun removeRule(rule: IptablesRule): Result<Unit> = runCatching {
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
-        exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
-        exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
-
+        exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
+        exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
+        exec("iptables -t nat -D POSTROUTING -p tcp --dport 443 -j MASQUERADE")
+        exec("iptables -t nat -D POSTROUTING -p tcp --dport 80 -j MASQUERADE")
         synchronized(activeRules) { activeRules.remove(rule) }
     }
 
@@ -39,12 +41,16 @@ object IptablesManager {
         exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
         exec("iptables -t nat -A POSTROUTING -p tcp --dport 443 -j MASQUERADE")
         exec("iptables -t nat -A POSTROUTING -p tcp --dport 80 -j MASQUERADE")
+        globalRedirect = Pair(destHost, destPort)
     }
 
     fun removeGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
         exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:$destPort")
         exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
+        globalRedirect = null
     }
+
+    fun getGlobalRedirect(): Pair<String, Int>? = globalRedirect
 
     fun removeAllRules(): Result<Unit> = runCatching {
         synchronized(activeRules) {
@@ -55,8 +61,8 @@ object IptablesManager {
 
     fun flushAll(): Result<Unit> = runCatching {
         exec("iptables -t nat -F OUTPUT")
-        //exec("ip6tables -t nat -F OUTPUT")
         synchronized(activeRules) { activeRules.clear() }
+        globalRedirect = null
     }
 
     fun getActiveRules(): List<IptablesRule> = synchronized(activeRules) { activeRules.toList() }

@@ -109,6 +109,15 @@ class MainActivity : AppCompatActivity() {
         b.switchLogging.setOnCheckedChangeListener { _, checked ->
             ConfigWriter.setLoggingEnabled(this, checked)
         }
+
+        // Scroll proxy card into view when keyboard opens.
+        // OnGlobalLayoutListener fires after every layout pass — including the resize
+        // triggered by the soft keyboard — so cardProxy.top is always the post-keyboard value.
+        b.scrollView.viewTreeObserver.addOnGlobalLayoutListener {
+            if (currentFocus == b.etProxyHost || currentFocus == b.etProxyPort) {
+                b.scrollView.smoothScrollTo(0, b.cardProxy.top)
+            }
+        }
     }
 
     private fun applyIptables() {
