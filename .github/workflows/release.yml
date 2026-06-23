@@ -18,15 +18,19 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-          cache: gradle
+
+      - name: Install Gradle 9.1.0 and generate wrapper
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-9.1.0-bin.zip -O /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/gradle
+          /tmp/gradle/gradle-9.1.0/bin/gradle wrapper
+          chmod +x gradlew
 
       - name: Accept Android SDK licenses
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Build release APK
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Rename APK
         run: |
