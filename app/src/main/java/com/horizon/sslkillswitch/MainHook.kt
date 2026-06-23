@@ -19,6 +19,7 @@ import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.IXposedHookZygoteInit
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 
 internal const val TAG = "SSLKillSwitch"
@@ -37,7 +38,17 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
         val pkg = lpparam.packageName
-        if (pkg == MY_PKG) return
+        if (pkg == MY_PKG) {
+            // Self-hook: flip ModuleStatus probes so our own UI knows the module is live.
+            runCatching {
+                val cls = lpparam.classLoader.loadClass("com.horizon.sslkillswitch.status.ModuleStatus")
+                XposedHelpers.findAndHookMethod(cls, "isActive",
+                    de.robv.android.xposed.XC_MethodReplacement.returnConstant(true))
+                XposedHelpers.findAndHookMethod(cls, "frameworkVersion",
+                    de.robv.android.xposed.XC_MethodReplacement.returnConstant(XposedBridge.getXposedVersion()))
+            }.onFailure { Log.w(TAG, "self-hook ModuleStatus failed: ${it.message}") }
+            return
+        }
 
         prefs.reload()
 

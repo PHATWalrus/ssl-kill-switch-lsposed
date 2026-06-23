@@ -41,8 +41,16 @@ object OkHttpHooks {
             object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     val client = param.result ?: return
-                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: OkHttpClient.Builder.build — replacing hostnameVerifier")
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: OkHttpClient.Builder.build — replacing hostnameVerifier + clearing pinner")
                     setField(client, "hostnameVerifier", HostnameVerifier { _: String, _: SSLSession -> true })
+                    // Belt + suspenders vs the CertificatePinner.check hook: replace the pinner
+                    // with an empty one (Builder().build()) — works on OkHttp 3.x and 4.x.
+                    runCatching {
+                        val builderClass = cl.loadClass("okhttp3.CertificatePinner\$Builder")
+                        val emptyPinner = builderClass.getMethod("build")
+                            .invoke(builderClass.getDeclaredConstructor().newInstance())
+                        setField(client, "certificatePinner", emptyPinner)
+                    }
                 }
             }
         )

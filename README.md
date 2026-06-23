@@ -4,16 +4,17 @@ LSPosed module for disabling SSL certificate pinning on Android. Covers Java-lay
 
 ## Features
 
-- **Java SSL bypass**: X509TrustManager, HostnameVerifier, OkHttp CertificatePinner (v3/v4), TrustKit, Conscrypt, WebViewClient
+- **Java SSL bypass**: X509TrustManager (incl. 3-arg `checkServerTrusted` returning the chain + `X509TrustManagerExtensions`), HostnameVerifier (named classes + `HttpsURLConnection.setHostnameVerifier` swap), OkHttp CertificatePinner (v3/v4, plus pinner field cleared on build), TrustKit, Conscrypt, WebViewClient
 - **WebView bypass**: `onReceivedSslError` → `handler.proceed()`; `SslErrorHandler.cancel()` redirected to `proceed()` catching all subclass overrides; `onReceivedError` suppressed; Cordova and Tencent X5 WebView fully covered
-- **Flutter native bypass (Kotlin mode)**: pattern-scan `ssl_verify_peer_cert` prologue in `libflutter.so`, copy + patch return-0 stub, load patched lib before original; handles `extractNativeLibs=false` (APK-embedded libs) via ZipFile extraction
-- **Native SSL bypass**: BoringSSL inline hooks via ARM64 trampoline — covers React Native and any app embedding BoringSSL/OpenSSL
-- **Per-app scope**: enable hooks only for selected packages
-- **Per-hook toggle**: TrustManager, OkHttp, WebView, Native independently per app
-- **Domain filter**: optionally restrict bypass to specific hostnames
-- **iptables redirect**: global and per-UID NAT rules forwarding app traffic to a proxy (Burp, mitmproxy); per-rule delete and flush-all from UI
+- **Flutter native bypass**: Kotlin file-patch — pattern-scan `ssl_verify_peer_cert` prologue in `libflutter.so`, copy + patch return-0 stub + verify read-back, load patched lib before original; handles `extractNativeLibs=false` via ZipFile extraction. 4 ARM64 prologue patterns (synced with the native scanner)
+- **iptables redirect**: global and per-UID NAT rules forwarding app traffic to a proxy (Burp, mitmproxy); host/port validated before `su -c`; per-rule delete and flush-all from UI
 - **Global logging toggle**: enable/disable Xposed log output from the Settings card
 - Root required only for iptables rules; SSL bypass works without root via LSPosed scope
+
+> **Status / scope notes**
+> - Java SSL hooks apply to **every process in the LSPosed scope**, not gated by the in-app app list. The in-app per-app hook chips and the domain-filter dialog are **not currently enforced** for the Java layer — scope is controlled by LSPosed module-scope selection.
+> - The native lib (`ssl_kill_switch.so`) contains symbol-based hooks (`SSL_CTX_new` / `X509_verify_cert` trampolines for React Native and system BoringSSL) and an in-memory Flutter patcher, but the whole native path is **currently disabled** in `MainHook` — Flutter bypass runs entirely via the Kotlin file-patch. Both paths share the same pattern set, so a native in-memory fallback would cover no extra Flutter versions.
+> - iptables redirects **TCP only**; QUIC/HTTP3 over UDP 443 is not redirected.
 
 ## Architecture
 

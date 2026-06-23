@@ -26,6 +26,7 @@ object TrustManagerHooks {
         val cl = ClassLoader.getSystemClassLoader()
         if (loggingEnabled) Log.i(TAG, "[system] boot-classpath TrustManager hooks")
         hookTrustManagerImpl(cl, "system")
+        hookTrustManagerExtensions(cl, "system")
         hookHostnameVerifier(cl, "system")
         hookSSLContextInit("system")
         hookConscrypt(cl, "system")
@@ -36,6 +37,7 @@ object TrustManagerHooks {
     fun apply(cl: ClassLoader, pkg: String) {
         if (loggingEnabled) Log.d(TAG, "[TrustManager] registering hooks for $pkg")
         hookTrustManagerImpl(cl, pkg)
+        hookTrustManagerExtensions(cl, pkg)
         hookHostnameVerifier(cl, pkg)
         hookSSLContextInit(pkg)
         hookConscrypt(cl, pkg)
@@ -86,6 +88,36 @@ object TrustManagerHooks {
                 }
             }
         )
+
+        // 3-arg overload checkServerTrusted(chain, authType, String host) returns
+        // List<X509Certificate> (the cleaned chain). This is the path OkHttp's
+        // AndroidPlatform hits via X509TrustManagerExtensions — must return the chain, NOT null.
+        tryHook("com.android.org.conscrypt.TrustManagerImpl", cl, "checkServerTrusted",
+            Array<X509Certificate>::class.java, String::class.java, String::class.java,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: TrustManagerImpl.checkServerTrusted(host)")
+                    @Suppress("UNCHECKED_CAST")
+                    param.result = (param.args[0] as Array<X509Certificate>).toList()
+                }
+            }
+        )
+    }
+
+    // android.net.http.X509TrustManagerExtensions.checkServerTrusted(chain, authType, host)
+    // returns List<X509Certificate>. Used directly by AndroidPinning and many custom pinners.
+    private fun hookTrustManagerExtensions(cl: ClassLoader, pkg: String) {
+        if (loggingEnabled) Log.d(TAG, "[TrustManager] hookTrustManagerExtensions [$pkg]")
+        tryHook("android.net.http.X509TrustManagerExtensions", cl, "checkServerTrusted",
+            Array<X509Certificate>::class.java, String::class.java, String::class.java,
+            object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: X509TrustManagerExtensions.checkServerTrusted")
+                    @Suppress("UNCHECKED_CAST")
+                    param.result = (param.args[0] as Array<X509Certificate>).toList()
+                }
+            }
+        )
     }
 
     private fun hookHostnameVerifier(cl: ClassLoader, pkg: String) {
@@ -105,6 +137,20 @@ object TrustManagerHooks {
             tryHook(className, cl, "verify",
                 String::class.java, javax.net.ssl.SSLSession::class.java, alwaysTrue)
         }
+
+        // Catch anonymous/custom verifiers set via conn.setHostnameVerifier(...) —
+        // not reachable by class name. Swap the arg for an always-true verifier.
+        val permissive = javax.net.ssl.HostnameVerifier { _, _ -> true }
+        val swapArg = object : XC_MethodHook() {
+            override fun beforeHookedMethod(param: MethodHookParam) {
+                if (loggingEnabled) Log.i(TAG, "[$pkg] FIRED: HttpsURLConnection.${param.method.name} — swapping verifier")
+                param.args[0] = permissive
+            }
+        }
+        tryHook(javax.net.ssl.HttpsURLConnection::class.java, "setHostnameVerifier",
+            javax.net.ssl.HostnameVerifier::class.java, swapArg)
+        tryHook(javax.net.ssl.HttpsURLConnection::class.java, "setDefaultHostnameVerifier",
+            javax.net.ssl.HostnameVerifier::class.java, swapArg)
     }
 
     private fun hookSSLContextInit(pkg: String) {

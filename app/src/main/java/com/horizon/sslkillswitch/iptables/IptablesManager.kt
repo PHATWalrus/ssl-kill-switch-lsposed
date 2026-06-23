@@ -17,7 +17,17 @@ object IptablesManager {
     @Volatile private var globalRedirect: Pair<String, Int>? = null
     private const val TAG = "IptablesManager"
 
+    // IPv4 or RFC-952/1123 hostname. Rejects shell metacharacters so the value
+    // can't break out of the `su -c` string and run arbitrary commands as root.
+    private val HOST_RE = Regex("^[A-Za-z0-9._-]{1,253}$")
+
+    private fun validate(host: String, port: Int) {
+        require(HOST_RE.matches(host)) { "Invalid proxy host: '$host'" }
+        require(port in 1..65535) { "Invalid proxy port: $port" }
+    }
+
     fun applyRule(rule: IptablesRule): Result<Unit> = runCatching {
+        validate(rule.proxyHost, rule.proxyPort)
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
         exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
         exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
@@ -27,6 +37,7 @@ object IptablesManager {
     }
 
     fun removeRule(rule: IptablesRule): Result<Unit> = runCatching {
+        validate(rule.proxyHost, rule.proxyPort)
         val dest = "${rule.proxyHost}:${rule.proxyPort}"
         exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $dest")
         exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $dest")
@@ -37,6 +48,7 @@ object IptablesManager {
 
     // Redirect all TCP 80/443 to proxy. Excludes traffic already destined for proxy to avoid loop.
     fun applyGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
+        validate(destHost, destPort)
         exec("iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:$destPort")
         exec("iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
         exec("iptables -t nat -A POSTROUTING -p tcp --dport 443 -j MASQUERADE")
@@ -45,6 +57,7 @@ object IptablesManager {
     }
 
     fun removeGlobalRedirect(destHost: String, destPort: Int): Result<Unit> = runCatching {
+        validate(destHost, destPort)
         exec("iptables -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination $destHost:$destPort")
         exec("iptables -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination $destHost:$destPort")
         globalRedirect = null

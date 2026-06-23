@@ -37,7 +37,23 @@ class MainActivity : AppCompatActivity() {
         b.etProxyPort.setText(ConfigWriter.getProxyPort(this).toString())
         b.switchProxy.isChecked = ConfigWriter.isProxyEnabled(this)
         b.switchLogging.isChecked = ConfigWriter.isLoggingEnabled(this)
-        b.tvModuleStatus.text = "Module status: install via LSPosed"
+        showModuleStatus()
+    }
+
+    private fun showModuleStatus() {
+        val active = com.horizon.sslkillswitch.status.ModuleStatus.isActive()
+        val green = 0xFF4CAF50.toInt()
+        val red   = 0xFFE53935.toInt()
+        if (active) {
+            b.tvModuleStatus.text = "✓ Active — hooks loaded in this process"
+            b.tvModuleStatus.setTextColor(green)
+            b.tvFrameworkInfo.text = "LSPosed/Xposed API v${com.horizon.sslkillswitch.status.ModuleStatus.frameworkVersion()}"
+            b.tvFrameworkInfo.visibility = View.VISIBLE
+        } else {
+            b.tvModuleStatus.text = "✗ Inactive — enable the module in LSPosed and add this app to its scope"
+            b.tvModuleStatus.setTextColor(red)
+            b.tvFrameworkInfo.visibility = View.GONE
+        }
     }
 
     private fun refreshSelectedApps() {
@@ -102,6 +118,10 @@ class MainActivity : AppCompatActivity() {
 
         b.btnViewRules.setOnClickListener {
             startActivity(Intent(this, ActiveRulesActivity::class.java))
+        }
+
+        b.btnViewLogs.setOnClickListener {
+            startActivity(Intent(this, LogViewerActivity::class.java))
         }
 
         b.switchProxy.setOnCheckedChangeListener { _, _ -> saveProxyConfig() }

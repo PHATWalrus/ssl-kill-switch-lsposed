@@ -35,6 +35,11 @@
             android:exported="false"
             android:label="Active Rules" />
 
+        <activity
+            android:name=".ui.LogViewerActivity"
+            android:exported="false"
+            android:label="Live Logs" />
+
         <!-- LSPosed module metadata -->
         <meta-data
             android:name="xposedmodule"
