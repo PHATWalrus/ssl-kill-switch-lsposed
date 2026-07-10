@@ -1,4 +1,4 @@
-# SSL Kill Switch — LSPosed Module
+# SSL Kill Switch - LSPosed Module
 
 LSPosed module for disabling SSL certificate pinning on Android. Covers Java-layer pinning (OkHttp, TrustManager, Conscrypt, WebView, Cordova, Tencent X5) and native-layer pinning (BoringSSL embedded in Flutter, React Native, and other NDK-based apps).
 
