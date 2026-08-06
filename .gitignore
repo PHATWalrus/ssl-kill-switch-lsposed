@@ -12,3 +12,4 @@ app/build/tmp/kotlin-classes/*
 .gradle/
 app/build/
 build/reports/problems/*
+app/build/kotlin/*

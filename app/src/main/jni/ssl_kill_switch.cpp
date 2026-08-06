@@ -222,8 +222,9 @@ static void try_hook_in_lib(const char* lib_substr) {
 // ─── Flutter: pattern-based ssl_verify_peer_cert bypass ──────────────────────
 //
 // Flutter statically links BoringSSL — no exported symbols, dlsym always fails.
-// Pattern-scan the r-x pages of libflutter.so for ssl_verify_peer_cert prologue,
-// then patch it to return 0 (ssl_verify_ok) unconditionally.
+// Pattern-scan the r-x pages of libflutter.so for ssl_verify_peer_cert (or
+// ssl_crypto_x509_session_verify_cert_chain) prologue, then patch it to the
+// appropriate success return value.
 //
 // Called from Java via JNI after System.loadLibrary("flutter") fires, so
 // libflutter.so is guaranteed to be mapped at this point.
@@ -287,55 +288,58 @@ static std::vector<MemRange> get_rx_ranges(const char* lib, const char* pkg_filt
     return r;
 }
 
-// Patch ssl_verify_peer_cert to unconditionally return ssl_verify_ok (0).
-// Mirrors Frida's: Interceptor.replace(addr, new NativeCallback(() => 0, 'int', ['pointer','int']))
+// Patch the matched verification function to return the expected success value.
+// ssl_verify_peer_cert expects 0 (ssl_verify_ok); ssl_crypto_x509_session_verify_cert_chain expects 1 (true).
 // Uses mem_write (proc/self/mem first) to bypass Android 10+ W^X.
-static bool patch_return_zero(void* addr) {
+static bool patch_return_value(void* addr, int retval) {
 #if defined(__aarch64__)
-    // MOV W0, #0  (ssl_verify_ok)
-    // RET
-    const uint32_t ins[2] = { 0x52800000u, 0xD65F03C0u };
+    // MOV W0, #retval ; RET
+    uint32_t mov = 0x52800000u | ((retval & 0xFFFF) << 5);
+    const uint32_t ins[2] = { mov, 0xD65F03C0u };
     const size_t   sz     = sizeof(ins);
 #elif defined(__arm__)
-    // MOVS R0, #0 ; BX LR
-    const uint8_t  ins[4] = { 0x00, 0x20, 0x70, 0x47 };
+    // MOVS R0, #retval ; BX LR
+    const uint8_t  ins[4] = { (uint8_t)(retval & 0xFF), 0x20, 0x70, 0x47 };
     const size_t   sz     = sizeof(ins);
 #elif defined(__x86_64__) || defined(__i386__)
-    // XOR EAX, EAX ; RET
-    const uint8_t  ins[3] = { 0x31, 0xC0, 0xC3 };
+    // MOV EAX, #retval ; RET
+    const uint8_t  ins[6] = { 0xB8, (uint8_t)(retval & 0xFF), 0x00, 0x00, 0x00, 0xC3 };
     const size_t   sz     = sizeof(ins);
 #else
-    LOGE("Flutter: patch_return_zero: unsupported arch"); return false;
+    LOGE("Flutter: patch_return_value: unsupported arch"); return false;
 #endif
     if (!mem_write(addr, ins, sz)) {
-        LOGE("Flutter: patch_return_zero failed @ %p", addr);
+        LOGE("Flutter: patch_return_value failed @ %p", addr);
         return false;
     }
-    LOGI("Flutter: patched ssl_verify_peer_cert @ %p (%zu bytes)", addr, sz);
+    LOGI("Flutter: patched verification stub @ %p (%zu bytes) -> retval=%d", addr, sz, retval);
     return true;
 }
 
-static const char* FLUTTER_PAT_ARM64[] = {
-    "F? 0F 1C F8 F? 5? 01 A9 F? 5? 02 A9 F? ?? 03 A9 ?? ?? ?? ?? 68 1A 40 F9",
-    "F? 43 01 D1 FE 67 01 A9 F8 5F 02 A9 F6 57 03 A9 F4 4F 04 A9 13 00 40 F9 F4 03 00 AA 68 1A 40 F9",
-    "FF 43 01 D1 FE 67 01 A9 ?? ?? 06 94 ?? 7? 06 94 68 1A 40 F9 15 15 41 F9 B5 00 00 B4 B6 4A 40 F9",
-    "FF C3 01 D1 FD 7B 01 A9 6A A1 0B 94 08 0A 80 52 48 00 00 39 1A 50 40 F9 DA 02 00 B4 48 03 40 F9",
+struct FlutterPattern { const char* pattern; int retval; };
+
+static const FlutterPattern FLUTTER_PAT_ARM64[] = {
+    { "F? 0F 1C F8 F? 5? 01 A9 F? 5? 02 A9 F? ?? 03 A9 ?? ?? ?? ?? 68 1A 40 F9", 0 },
+    { "F? 43 01 D1 FE 67 01 A9 F8 5F 02 A9 F6 57 03 A9 F4 4F 04 A9 13 00 40 F9 F4 03 00 AA 68 1A 40 F9", 0 },
+    { "FF 43 01 D1 FE 67 01 A9 ?? ?? 06 94 ?? 7? 06 94 68 1A 40 F9 15 15 41 F9 B5 00 00 B4 B6 4A 40 F9", 0 },
+    // Matches ssl_crypto_x509_session_verify_cert_chain (bool, 1 = verified) instead of ssl_verify_peer_cert
+    { "FF ?3 01 D1 F? ?? 01 A9 ?? ?? ?? 94 ?? ?? ?? 52 48 00 00 39 1A 50 40 F9 DA 02 00 B4 48 03 40 F9", 1 },
 };
-static const char* FLUTTER_PAT_ARM[] = {
-    "2D E9 F? 4? D0 F8 00 80 81 46 D8 F8 18 00 D0 F8",
+static const FlutterPattern FLUTTER_PAT_ARM[] = {
+    { "2D E9 F? 4? D0 F8 00 80 81 46 D8 F8 18 00 D0 F8", 0 },
 };
-static const char* FLUTTER_PAT_X64[] = {
-    "55 41 57 41 56 41 55 41 54 53 50 49 89 f? 4? 8b ?? 4? 8b 4? 30 4c 8b ?? ?? 0? 00 00 4d 85 ?? 74 1? 4d 8b",
-    "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FF 48 8B 1F 48 8B 43 30 4C 8B A0 28 02 00 00 4D 85 E4 74",
-    "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FE 4C 8B 27 49 8B 44 24 30 48 8B 98 D0 01 00 00 48 85 DB",
+static const FlutterPattern FLUTTER_PAT_X64[] = {
+    { "55 41 57 41 56 41 55 41 54 53 50 49 89 F? 4? 8B ?? 4? 8B 4? 30 4C 8B ?? ?? 0? 00 00 4D 85 ?? 74 1? 4D 8B", 0 },
+    { "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FF 48 8B 1F 48 8B 43 30 4C 8B A0 28 02 00 00 4D 85 E4 74", 0 },
+    { "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FE 4C 8B 27 49 8B 44 24 30 48 8B 98 D0 01 00 00 48 85 DB", 0 },
 };
-static const char* FLUTTER_PAT_X86[] = {
-    "55 89 E5 53 57 56 83 E4 F0 83 EC 20 E8 00 00 00 00 5B 81 C3 2B 79 66 00 8B 7D 08 8B 17 8B 42 18 8B 80 88 01",
+static const FlutterPattern FLUTTER_PAT_X86[] = {
+    { "55 89 E5 53 57 56 83 E4 F0 83 EC 20 E8 00 00 00 00 5B 81 C3 2B 79 66 00 8B 7D 08 8B 17 8B 42 18 8B 80 88 01", 0 },
 };
 
 static volatile bool s_flutter_patched = false;
 
-// Scans libflutter.so r-x ranges for ssl_verify_peer_cert and patches it.
+// Scans libflutter.so r-x ranges for the verification stub and patches it.
 // pkg_filter: if non-null, only scan paths containing the package name (per-app targeting).
 static bool try_patch_flutter(const char* pkg_filter = nullptr) {
     if (s_flutter_patched) return true;
@@ -352,25 +356,25 @@ static bool try_patch_flutter(const char* pkg_filter = nullptr) {
     LOGI("Flutter: scanning %zu rx ranges", ranges.size());
 
 #if defined(__aarch64__)
-    const char** pats=FLUTTER_PAT_ARM64; size_t np=sizeof(FLUTTER_PAT_ARM64)/sizeof(*FLUTTER_PAT_ARM64); int th=0;
+    const FlutterPattern* pats=FLUTTER_PAT_ARM64; size_t np=sizeof(FLUTTER_PAT_ARM64)/sizeof(*FLUTTER_PAT_ARM64); int th=0;
 #elif defined(__arm__)
-    const char** pats=FLUTTER_PAT_ARM;  size_t np=sizeof(FLUTTER_PAT_ARM)/sizeof(*FLUTTER_PAT_ARM);   int th=1;
+    const FlutterPattern* pats=FLUTTER_PAT_ARM;  size_t np=sizeof(FLUTTER_PAT_ARM)/sizeof(*FLUTTER_PAT_ARM);   int th=1;
 #elif defined(__x86_64__)
-    const char** pats=FLUTTER_PAT_X64;  size_t np=sizeof(FLUTTER_PAT_X64)/sizeof(*FLUTTER_PAT_X64);   int th=0;
+    const FlutterPattern* pats=FLUTTER_PAT_X64;  size_t np=sizeof(FLUTTER_PAT_X64)/sizeof(*FLUTTER_PAT_X64);   int th=0;
 #elif defined(__i386__)
-    const char** pats=FLUTTER_PAT_X86;  size_t np=sizeof(FLUTTER_PAT_X86)/sizeof(*FLUTTER_PAT_X86);   int th=0;
+    const FlutterPattern* pats=FLUTTER_PAT_X86;  size_t np=sizeof(FLUTTER_PAT_X86)/sizeof(*FLUTTER_PAT_X86);   int th=0;
 #else
     LOGE("Flutter: unsupported arch"); return false;
 #endif
 
     for (size_t pi=0; pi<np; pi++) {
-        auto pat = parse_pattern(pats[pi]);
+        auto pat = parse_pattern(pats[pi].pattern);
         for (const auto& r : ranges) {
             const uint8_t* hit = scan_pattern(reinterpret_cast<const uint8_t*>(r.base), r.size, pat);
             if (!hit) continue;
             void* tgt = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(hit)+th);
-            LOGI("Flutter: ssl_verify_peer_cert matched pattern[%zu] @ %p", pi, tgt);
-            if (patch_return_zero(tgt)) {
+            LOGI("Flutter: matched pattern[%zu] @ %p (retval=%d)", pi, tgt, pats[pi].retval);
+            if (patch_return_value(tgt, pats[pi].retval)) {
                 LOGI("Flutter: patched — TLS verification disabled");
                 s_flutter_patched = true;
                 return true;
@@ -378,7 +382,7 @@ static bool try_patch_flutter(const char* pkg_filter = nullptr) {
             LOGE("Flutter: patch failed @ %p", tgt);
         }
     }
-    LOGE("Flutter: ssl_verify_peer_cert not found — patterns may need update");
+    LOGE("Flutter: verification function not found — patterns may need update");
     return false;
 }
 

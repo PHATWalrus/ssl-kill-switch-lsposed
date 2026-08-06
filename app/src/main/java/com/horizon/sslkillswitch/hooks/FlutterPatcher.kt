@@ -11,9 +11,10 @@ private const val TAG = "SSLKillSwitch"
 /**
  * Kotlin-side Flutter/BoringSSL bypass via file patching.
  *
- * Strategy: scan libflutter.so bytes for ssl_verify_peer_cert prologue,
- * copy the file, overwrite the prologue with a return-0 stub, then load
- * the patched copy before the original is mapped.
+ * Strategy: scan libflutter.so bytes for ssl_verify_peer_cert (or
+ * ssl_crypto_x509_session_verify_cert_chain) prologue, copy the file,
+ * overwrite the prologue with a return-success stub, then load the patched
+ * copy before the original is mapped.
  *
  * Handles both extracted libs (android:extractNativeLibs=true) and
  * APK-embedded libs (android:extractNativeLibs=false, default since AGP 4.2).
@@ -21,31 +22,50 @@ private const val TAG = "SSLKillSwitch"
 object FlutterPatcher {
 
     private data class PatternByte(val value: Int, val mask: Int)
+    private data class FlutterPattern(val hex: String, val retval: Int = 0)
 
-    // ── ssl_verify_peer_cert prologue patterns ────────────────────────────────
+    // ── ssl_verify_peer_cert / ssl_crypto_x509_session_verify_cert_chain prologue patterns ────────────────────────────────
 
     private val PATTERNS_ARM64 = listOf(
-        "F? 0F 1C F8 F? 5? 01 A9 F? 5? 02 A9 F? ?? 03 A9 ?? ?? ?? ?? 68 1A 40 F9",
-        "F? 43 01 D1 FE 67 01 A9 F8 5F 02 A9 F6 57 03 A9 F4 4F 04 A9 13 00 40 F9 F4 03 00 AA 68 1A 40 F9",
-        "FF 43 01 D1 FE 67 01 A9 ?? ?? 06 94 ?? 7? 06 94 68 1A 40 F9 15 15 41 F9 B5 00 00 B4 B6 4A 40 F9",
-        "FF C3 01 D1 FD 7B 01 A9 6A A1 0B 94 08 0A 80 52 48 00 00 39 1A 50 40 F9 DA 02 00 B4 48 03 40 F9"
+        FlutterPattern("F? 0F 1C F8 F? 5? 01 A9 F? 5? 02 A9 F? ?? 03 A9 ?? ?? ?? ?? 68 1A 40 F9", 0),
+        FlutterPattern("F? 43 01 D1 FE 67 01 A9 F8 5F 02 A9 F6 57 03 A9 F4 4F 04 A9 13 00 40 F9 F4 03 00 AA 68 1A 40 F9", 0),
+        FlutterPattern("FF 43 01 D1 FE 67 01 A9 ?? ?? 06 94 ?? 7? 06 94 68 1A 40 F9 15 15 41 F9 B5 00 00 B4 B6 4A 40 F9", 0),
+        // Matches ssl_crypto_x509_session_verify_cert_chain (bool, 1 = verified) instead of
+        // ssl_verify_peer_cert (ssl_verify_result_t, 0 = ok), so it needs retval: 1
+        FlutterPattern("FF ?3 01 D1 F? ?? 01 A9 ?? ?? ?? 94 ?? ?? ?? 52 48 00 00 39 1A 50 40 F9 DA 02 00 B4 48 03 40 F9", 1),
     )
     private val PATTERNS_ARM32 = listOf(
-        "2D E9 F? 4? D0 F8 00 80 81 46 D8 F8 18 00 D0 F8",
+        FlutterPattern("2D E9 F? 4? D0 F8 00 80 81 46 D8 F8 18 00 D0 F8", 0),
     )
     private val PATTERNS_X64 = listOf(
-        "55 41 57 41 56 41 55 41 54 53 50 49 89 f? 4? 8b ?? 4? 8b 4? 30 4c 8b ?? ?? 0? 00 00 4d 85 ?? 74 1? 4d 8b",
-        "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FF 48 8B 1F 48 8B 43 30 4C 8B A0 28 02 00 00 4D 85 E4 74",
-        "55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FE 4C 8B 27 49 8B 44 24 30 48 8B 98 D0 01 00 00 48 85 DB",
+        FlutterPattern("55 41 57 41 56 41 55 41 54 53 50 49 89 F? 4? 8B ?? 4? 8B 4? 30 4C 8B ?? ?? 0? 00 00 4D 85 ?? 74 1? 4D 8B", 0),
+        FlutterPattern("55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FF 48 8B 1F 48 8B 43 30 4C 8B A0 28 02 00 00 4D 85 E4 74", 0),
+        FlutterPattern("55 41 57 41 56 41 55 41 54 53 48 83 EC 18 49 89 FE 4C 8B 27 49 8B 44 24 30 48 8B 98 D0 01 00 00 48 85 DB", 0),
     )
     private val PATTERNS_X86 = listOf(
-        "55 89 E5 53 57 56 83 E4 F0 83 EC 20 E8 00 00 00 00 5B 81 C3 2B 79 66 00 8B 7D 08 8B 17 8B 42 18 8B 80 88 01",
+        FlutterPattern("55 89 E5 53 57 56 83 E4 F0 83 EC 20 E8 00 00 00 00 5B 81 C3 2B 79 66 00 8B 7D 08 8B 17 8B 42 18 8B 80 88 01", 0),
     )
 
-    // ── Return-zero stubs ─────────────────────────────────────────────────────
-    private val PATCH_ARM64  = byteArrayOf(0x00, 0x00, 0x80.toByte(), 0x52, 0xC0.toByte(), 0x03, 0x5F, 0xD6.toByte())
-    private val PATCH_ARM32  = byteArrayOf(0x00, 0x20, 0x70, 0x47)
-    private val PATCH_X86X64 = byteArrayOf(0x31, 0xC0.toByte(), 0xC3.toByte())
+    // ── Return-value stubs ─────────────────────────────────────────────────────
+    private fun patchBytes(arch: String, retval: Int): ByteArray = when (arch) {
+        "arm64" -> {
+            val insn = 0x52800000 or ((retval and 0xFFFF) shl 5) // MOV W0, #retval
+            byteArrayOf(
+                (insn and 0xFF).toByte(),
+                ((insn shr 8) and 0xFF).toByte(),
+                ((insn shr 16) and 0xFF).toByte(),
+                ((insn shr 24) and 0xFF).toByte(),
+                0xC0.toByte(), 0x03, 0x5F, 0xD6.toByte()          // RET
+            )
+        }
+        "arm" -> byteArrayOf(
+            (retval and 0xFF).toByte(), 0x20, 0x70, 0x47         // MOVS R0, #retval ; BX LR
+        )
+        "x64", "x86" -> byteArrayOf(
+            0xB8.toByte(), (retval and 0xFF).toByte(), 0x00, 0x00, 0x00, 0xC3.toByte() // MOV EAX, #retval ; RET
+        )
+        else -> throw IllegalArgumentException("unsupported arch $arch")
+    }
 
     // ── Pattern helpers ───────────────────────────────────────────────────────
 
@@ -323,7 +343,7 @@ object FlutterPatcher {
     // ── Public API ────────────────────────────────────────────────────────────
 
     /**
-     * Copy/extract libflutter.so, patch ssl_verify_peer_cert to return 0, return patched path.
+     * Copy/extract libflutter.so, patch Flutter's cert verification to its success return value, return patched path.
      * Accepts both on-disk paths and APK-embedded paths ("apk!/lib/arch/lib.so").
      * Returns null if the pattern didn't match or file ops failed.
      */
@@ -341,14 +361,14 @@ object FlutterPatcher {
             libFlutterPath
         }
 
-        val (patterns, patchBytes, thumbOffset) = when (arch) {
-            "arm64" -> Triple(PATTERNS_ARM64,  PATCH_ARM64,  0)
-            "arm"   -> Triple(PATTERNS_ARM32,  PATCH_ARM32,  1)
-            "x64"   -> Triple(PATTERNS_X64,    PATCH_X86X64, 0)
-            "x86"   -> Triple(PATTERNS_X86,    PATCH_X86X64, 0)
+        val (patterns, thumbOffset) = when (arch) {
+            "arm64" -> Pair(PATTERNS_ARM64, 0)
+            "arm"   -> Pair(PATTERNS_ARM32, 1)
+            "x64"   -> Pair(PATTERNS_X64,   0)
+            "x86"   -> Pair(PATTERNS_X86,   0)
             else    -> { Log.e(TAG, "FlutterPatcher: unsupported arch $arch"); return null }
         }
-        Log.d(TAG, "FlutterPatcher: ${patterns.size} pattern(s) arch=$arch patch=${patchBytes.size}B thumbOffset=$thumbOffset")
+        Log.d(TAG, "FlutterPatcher: ${patterns.size} pattern(s) arch=$arch thumbOffset=$thumbOffset")
 
         val src = File(srcPath)
         if (!src.exists()) { Log.e(TAG, "FlutterPatcher: $srcPath not found"); return null }
@@ -358,14 +378,15 @@ object FlutterPatcher {
         }
         Log.d(TAG, "FlutterPatcher: read ${data.size} bytes from $srcPath")
 
-        for ((idx, patStr) in patterns.withIndex()) {
-            Log.d(TAG, "FlutterPatcher: trying pattern[$idx]: ${patStr.take(48)}…")
-            val compiled    = parsePattern(patStr)
+        for ((idx, flutterPat) in patterns.withIndex()) {
+            Log.d(TAG, "FlutterPatcher: trying pattern[$idx]: ${flutterPat.hex.take(48)}…")
+            val compiled    = parsePattern(flutterPat.hex)
             val offset      = scanPattern(data, compiled)
             if (offset < 0) { Log.d(TAG, "FlutterPatcher: pattern[$idx] — no match"); continue }
 
             val patchOffset = offset + thumbOffset
-            Log.i(TAG, "FlutterPatcher: matched pattern[$idx] @ 0x${patchOffset.toString(16)}")
+            val patchBytes  = patchBytes(arch, flutterPat.retval)
+            Log.i(TAG, "FlutterPatcher: matched pattern[$idx] @ 0x${patchOffset.toString(16)} (retval=${flutterPat.retval})")
 
             // Write to a distinct output file so the extracted file stays reusable
             val out = File(getCacheDir(pkg), "libflutter_patched.so")
