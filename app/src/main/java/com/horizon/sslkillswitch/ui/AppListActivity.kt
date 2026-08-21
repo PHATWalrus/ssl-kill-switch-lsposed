@@ -39,6 +39,7 @@ class AppListActivity : AppCompatActivity() {
     private var showSelectedOnly = false
 
     data class AppInfo(
+        val isSystem: Boolean,
         val packageName: String,
         val label: String,
         var enabled: Boolean,
@@ -76,8 +77,7 @@ class AppListActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             val pm = packageManager
             val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                .filter { (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 }
-                .sortedBy { pm.getApplicationLabel(it).toString() }
+                                .sortedBy { pm.getApplicationLabel(it).toString() }
 
             val enabledApps = ConfigWriter.getEnabledApps(this@AppListActivity)
             val tmApps      = ConfigWriter.getHookCategoryApps(this@AppListActivity, KEY_HOOK_TRUSTMANAGER)
@@ -88,6 +88,7 @@ class AppListActivity : AppCompatActivity() {
             val apps = packages.map { info ->
                 val pkg = info.packageName
                 AppInfo(
+                    isSystem     = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
                     packageName  = pkg,
                     label        = pm.getApplicationLabel(info).toString(),
                     enabled      = enabledApps.contains(pkg),
@@ -136,6 +137,11 @@ class AppListActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: VH, position: Int) {
             val app = items[position]
             with(holder.b) {
+                if (app.isSystem) {
+                    tvSystemBadge.visibility = View.VISIBLE
+                } else {
+                    tvSystemBadge.visibility = View.GONE
+                }
                 tvAppName.text     = app.label
                 tvPackageName.text = app.packageName
 

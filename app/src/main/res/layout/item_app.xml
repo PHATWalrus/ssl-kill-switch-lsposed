@@ -34,6 +34,20 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvSystemBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SYSTEM"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="#FF5722"
+                    android:paddingHorizontal="4dp"
+                    android:paddingVertical="2dp"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/tvPackageName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
